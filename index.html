@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>今天訂便當</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍱</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F5F2; --sheet:#FFFFFF; --ink:#1F2629; --muted:#687175; --rule:#DCE1DD;
+  --seal:#BE3426; --seal-soft:#FBE9E6; --leaf:#2E6A49; --leaf-soft:#E2EFE6; --warn:#9A5B00;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#141819; --sheet:#1D2224; --ink:#E8ECEA; --muted:#9AA3A6; --rule:#30383A;
+    --seal:#E5594A; --seal-soft:#3A1F1C; --leaf:#72C394; --leaf-soft:#1C3226; --warn:#E3A84B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141819; --sheet:#1D2224; --ink:#E8ECEA; --muted:#9AA3A6; --rule:#30383A;
+  --seal:#E5594A; --seal-soft:#3A1F1C; --leaf:#72C394; --leaf-soft:#1C3226; --warn:#E3A84B;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-text-size-adjust:100%}
+main{max-width:680px;margin:0 auto;padding:20px 16px 180px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* header */
+.hdr{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:8px 0 18px;border-bottom:2px solid var(--ink)}
+.date{color:var(--muted);font-size:14px}
+.shop{font-family:var(--serif);font-weight:900;font-size:clamp(34px,9vw,48px);line-height:1.15;margin:2px 0 6px;letter-spacing:.04em}
+.meta{font-size:14px;color:var(--muted);margin:0}
+.meta a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.rule-line{margin:6px 0 0;font-size:14px;font-weight:500}
+.seal{font-family:var(--serif);font-weight:900;font-size:20px;writing-mode:vertical-rl;letter-spacing:.18em;
+  color:var(--seal);border:3px solid var(--seal);border-radius:8px;padding:12px 6px;transform:rotate(-6deg);margin:6px 4px 0 0;line-height:1}
+.seal.muted{color:var(--muted);border-color:var(--muted);border-style:dashed}
+.seal.stamp{animation:stamp .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes stamp{from{transform:rotate(-14deg) scale(1.6);opacity:0}to{transform:rotate(-6deg) scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.seal.stamp{animation:none}}
+
+/* panels */
+.panel{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:16px;margin:18px 0}
+.panel h2,.sec h2{font-size:17px;margin:0 0 10px;font-weight:700}
+.owner{border-left:4px solid var(--seal)}
+.row-ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.shops{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.shopbtn{text-align:left;background:var(--paper);border:2px solid var(--rule);border-radius:10px;padding:12px}
+.shopbtn b{display:block;font-family:var(--serif);font-size:20px}
+.shopbtn span{font-size:13px;color:var(--muted)}
+.shopbtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft)}
+label.inline{display:flex;align-items:center;gap:8px;font-size:15px}
+input[type=time],input[type=text],input[type=password]{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;min-width:0}
+.btn{border:none;border-radius:8px;padding:10px 16px;font-weight:700;background:var(--ink);color:var(--sheet)}
+.btn.primary{background:var(--seal);color:#fff}
+.btn.ghost{background:transparent;border:1px solid var(--rule);color:var(--ink);font-weight:500}
+.btn.danger{background:transparent;border:1px solid var(--seal);color:var(--seal)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.hint{font-size:14px;color:var(--muted);margin:8px 0 0}
+.empty{text-align:center;padding:48px 16px;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:18px;margin-bottom:4px}
+
+/* threshold */
+.th-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.th-msg{font-weight:700}
+.th-msg.ok{color:var(--leaf)}
+.th-msg.no{color:var(--warn)}
+.bar{height:10px;background:var(--paper);border-radius:6px;overflow:hidden;margin-top:8px;border:1px solid var(--rule)}
+.bar i{display:block;height:100%;background:var(--warn);transition:width .3s}
+.bar i.ok{background:var(--leaf)}
+
+/* menu */
+.sec{margin:26px 0}
+.sec h2{display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--rule);padding-bottom:6px}
+.sec h2 small{font-weight:400;color:var(--muted);font-size:13px}
+.item{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;padding:10px 0 10px 10px;border-bottom:1px dashed var(--rule);border-left:3px solid transparent}
+.item.on{border-left-color:var(--leaf);background:linear-gradient(90deg,var(--leaf-soft),transparent 70%)}
+.iname{font-weight:500;flex:1 1 160px}
+.tag{display:inline-block;font-size:12px;font-weight:500;color:var(--seal);border:1px solid var(--seal);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:2px;line-height:1.5}
+.tag.t2{color:var(--muted);border-color:var(--muted)}
+.vars{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:flex-end}
+.var{display:flex;align-items:center;gap:8px}
+.vlabel{font-size:14px;color:var(--muted);white-space:nowrap}
+.vlabel b{color:var(--ink);font-weight:500}
+.stepper{display:flex;align-items:center;border:1px solid var(--rule);border-radius:8px;background:var(--sheet)}
+.stepper button{width:34px;height:34px;border:none;background:none;font-size:18px;line-height:1}
+.stepper button:disabled{opacity:.3;cursor:default}
+.stepper span{min-width:22px;text-align:center;font-weight:700}
+
+/* board */
+.agg{margin:0;padding:0;list-style:none}
+.agg li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--rule)}
+.agg li:last-child{border-bottom:none}
+.tot{display:flex;justify-content:space-between;font-weight:700;padding-top:10px;margin-top:4px;border-top:2px solid var(--ink)}
+.people{margin:0;padding:0;list-style:none}
+.people li{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:10px 0;border-bottom:1px dashed var(--rule)}
+.people li:last-child{border-bottom:none}
+.people .who{font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.people .who img{width:24px;height:24px;border-radius:50%;flex:none}
+.people .acct{font-weight:400;font-size:13px;color:var(--muted)}
+.people .what{grid-column:1/2;font-size:14px;color:var(--muted)}
+.people .amt{text-align:right;font-weight:700}
+.people .paid{grid-column:2/3;grid-row:2;text-align:right;font-size:14px}
+.paidtag{color:var(--leaf);font-weight:500}
+textarea{width:100%;min-height:150px;background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:10px;font:14px/1.6 var(--sans);color:var(--ink);resize:vertical}
+
+/* bottom bar */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--sheet);border-top:2px solid var(--ink);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.dock-in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center}
+.dock .nm{display:flex;align-items:center;gap:8px;grid-column:1/-1}
+.dock .nm input{flex:1}
+.dock .sum{font-size:15px}
+.dock .sum b{font-size:20px}
+.dock .acts{display:flex;gap:8px;align-items:center}
+.linkbtn{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:14px;padding:4px}
+
+.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--sheet);padding:8px 14px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;max-width:90vw}
+.toast.show{opacity:1}
+@media (max-width:420px){.shops{grid-template-columns:1fr}}
+
+.paybig{font-size:18px;margin:0 0 10px}
+.paybig b{font-size:28px;color:var(--seal)}
+.qrwrap{display:flex;justify-content:center}
+.qrwrap img{width:min(260px,100%);height:auto;border-radius:8px;border:1px solid var(--rule);background:#fff;padding:8px}
+.foot{text-align:center;color:var(--muted);font-size:14px;margin:30px 0 10px}
+</style>
+</head>
+<body>
+<main>
+  <div id="hdr"></div>
+  <div id="admin"></div>
+  <div id="status"></div>
+  <div id="pay"></div>
+  <div id="menu"></div>
+  <div id="board"></div>
+  <div id="foot"></div>
+</main>
+<div id="bar"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===== 設定：部署 Apps Script 後，把網址貼在這裡 ===== */
+var API_URL = "請貼上 Apps Script 網頁應用程式網址";
+/* 收款碼圖檔名稱，跟 index.html 放在同一層 */
+var QR_IMAGE = "qr.png";
+/* ==================================================== */
+
+
+var SHOPS = {
+  chunfu: {
+    name: "春福家", phone: "06-5996965", addr: "新市區中正路287號",
+    rule: { type: "amount", min: 500, label: "滿 500 元才外送" },
+    note: "會議便當需提前三天預訂，請直接跟店家訂。",
+    groups: [
+      { title: "豬肉", items: [
+        { id: "c1", name: "燒肉", v: [["b","便當",90],["s","單點",50]] },
+        { id: "c2", name: "薑汁燒肉", v: [["b","便當",95],["s","單點",60]] },
+        { id: "c3", name: "家傳排骨", rec: 1, v: [["b","便當",100],["s","單點",60]] },
+        { id: "c4", name: "日式豬排", v: [["b","便當",100],["s","單點",70]] },
+        { id: "c5", name: "炸紅糟肉", rec: 1, v: [["b","便當",110],["s","單點",70]] }
+      ]},
+      { title: "雞肉", items: [
+        { id: "c6", name: "滷雞腿", v: [["b","便當",95],["s","單點",65]] },
+        { id: "c7", name: "三杯雞腿肉", v: [["b","便當",100],["s","單點",70]] },
+        { id: "c8", name: "蜜汁雞腿排", v: [["b","便當",120],["s","單點",80]] },
+        { id: "c9", name: "椒鹽雞腿排", rec: 1, v: [["b","便當",120],["s","單點",80]] },
+        { id: "c10", name: "酥炸雞腿", rec: 1, v: [["b","便當",125],["s","單點",85]] },
+        { id: "c11", name: "椒麻雞腿排", rec: 1, v: [["b","便當",135],["s","單點",95]] }
+      ]},
+      { title: "魚", items: [
+        { id: "c12", name: "椒鹽魚排", v: [["b","便當",85],["s","單點",50]] },
+        { id: "c13", name: "香煎鮭魚排", v: [["b","便當",110],["s","單點",70]] }
+      ]},
+      { title: "蔬食", items: [
+        { id: "c14", name: "蔬食便當", sub: "6 菜，方便素", v: [["b","便當",80]] }
+      ]}
+    ]
+  },
+  yang: {
+    name: "洋食堂金咖啡", phone: "06-5815257", addr: "善化區興農路10號",
+    rule: { type: "count", min: 10, label: "10 份以上才外送" },
+    note: "價格為外帶價。",
+    groups: [
+      { title: "餐盒", items: [
+        { id: "y1", name: "主廚雞腿飯", v: [["x","",125]] },
+        { id: "y2", name: "主廚燒肉飯", v: [["x","",125]] },
+        { id: "y3", name: "越式烤肉飯", v: [["x","",125]] },
+        { id: "y4", name: "阿嬤手作獅子頭飯", v: [["x","",125]] },
+        { id: "y5", name: "舒肥果仁嫩雞胸飯", v: [["x","",130]] },
+        { id: "y6", name: "主廚鮭魚飯", v: [["x","",130]] },
+        { id: "y7", name: "炙燒胡椒鯖魚飯", v: [["x","",130]] },
+        { id: "y8", name: "古早味排骨飯", v: [["x","",135]] },
+        { id: "y9", name: "乾煎鱸魚排飯", v: [["x","",140]] },
+        { id: "y10", name: "虱目魚肚飯", wk: 1, v: [["a","豆豉",140],["b","乾煎",140]] },
+        { id: "y11", name: "經典烤魷魚飯", wk: 1, v: [["x","",155]] },
+        { id: "y12", name: "爆炒泡菜年糕燒肉飯", v: [["x","",165]] },
+        { id: "y13", name: "雙拼（雞腿＋鮭魚）飯", v: [["x","",175]] },
+        { id: "y14", name: "主廚牛肉飯", v: [["x","",220]] }
+      ]},
+      { title: "義大利麵", sub: "附濃湯", items: [
+        { id: "y15", name: "義大利麵", v: [["a","青醬蛤蜊",200],["b","奶油雞腿",200],["c","紅醬豬排",200]] },
+        { id: "y16", name: "煙花女魷魚義大利麵", v: [["x","",250]] }
+      ]},
+      { title: "焗烤", sub: "附濃湯", items: [
+        { id: "y17", name: "焗烤義大利麵", v: [["a","青醬蛤蜊",250],["b","奶油雞腿",250],["c","紅醬豬排",250]] },
+        { id: "y18", name: "焗烤雞肉飯", v: [["a","白醬",250],["b","紅醬",250]] }
+      ]},
+      { title: "沙拉", items: [
+        { id: "y19", name: "健康時蔬沙拉", v: [["a","胡麻醬",100],["b","油醋醬",100]] },
+        { id: "y20", name: "主廚雞腿沙拉", sub: "附濃湯", v: [["a","胡麻醬",150],["b","油醋醬",150]] },
+        { id: "y21", name: "舒肥雞胸沙拉", sub: "附濃湯", v: [["a","胡麻醬",150],["b","油醋醬",150]] }
+      ]}
+    ]
+  }
+};
+
+/* key -> {label, price, shop, order} */
+var ITEMS = {}; (function(){ var n=0; Object.keys(SHOPS).forEach(function(sk){ SHOPS[sk].groups.forEach(function(g){ g.items.forEach(function(it){ it.v.forEach(function(v){
+  var key = it.id + "." + v[0];
+  ITEMS[key] = { label: it.name + (v[1] ? "（" + v[1] + "）" : ""), price: v[2], shop: sk, order: n++ };
+}); }); }); }); })();
+
+function lsGet(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
+function lsSet(k,v){ try{ if(v) localStorage.setItem(k,v); else localStorage.removeItem(k); }catch(e){} }
+function newToken(){ var a=new Uint8Array(16); crypto.getRandomValues(a); return Array.prototype.map.call(a,function(b){ return ("0"+b.toString(16)).slice(-2); }).join(""); }
+
+var TOKEN = lsGet("bento_token"); if(!TOKEN){ TOKEN=newToken(); lsSet("bento_token", TOKEN); }
+
+var S = {
+  loading:true, failed:false, session:null, late:false, orders:[], cart:{}, name:lsGet("bento_name"), dirty:false, round:null,
+  pw:lsGet("bento_admin_pw"), isAdmin:false, showLogin:false, loginPw:"",
+  adminShop:"chunfu", adminDeadline:"10:30", confirmNew:false, busy:false, lastPhase:null, lastJson:""
+};
+
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function $(id){ return document.getElementById(id); }
+function prettyDate(s){ if(!s) return ""; var d=new Date(s+"T00:00:00"); return (d.getMonth()+1)+"/"+d.getDate()+"（"+"日一二三四五六".charAt(d.getDay())+"）"; }
+function todayPretty(){ var d=new Date(); return (d.getMonth()+1)+"/"+d.getDate()+"（"+"日一二三四五六".charAt(d.getDay())+"）"; }
+function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(function(){ t.classList.remove("show"); }, 2800); }
+function patch(el, html){
+  if(el._h === html) return; el._h = html;
+  var a=document.activeElement, id=null, ss=null, se=null;
+  if(a && el.contains(a) && a.id){ id=a.id; try{ ss=a.selectionStart; se=a.selectionEnd; }catch(e){} }
+  el.innerHTML = html;
+  if(id){ var n=document.getElementById(id); if(n){ n.focus({preventScroll:true}); try{ if(ss!=null) n.setSelectionRange(ss,se); }catch(e){} } }
+}
+
+/* ---------- API ---------- */
+function api(params){
+  params.token = TOKEN;
+  return fetch(API_URL, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body:JSON.stringify(params) })
+    .then(function(r){ return r.json(); });
+}
+function refresh(){
+  return api({ action:"state" }).then(function(res){
+    if(!res || !res.ok) throw new Error(res && res.error || "讀取失敗");
+    var json=JSON.stringify([res.session,res.late,res.orders]);
+    S.failed=false;
+    if(json===S.lastJson && !S.loading) return;
+    S.lastJson=json; S.session=res.session; S.late=!!res.late; S.orders=res.orders||[];
+    if(S.loading){
+      if(S.session && S.session.deadline) S.adminDeadline=S.session.deadline;
+      if(S.session && SHOPS[S.session.shop]) S.adminShop=S.session.shop;
+    }
+    S.loading=false; syncFromServer(); render();
+  }).catch(function(){ if(S.loading){ S.failed=true; S.loading=false; render(); } });
+}
+
+/* ---------- derived ---------- */
+function shop(){ return S.session && SHOPS[S.session.shop] ? SHOPS[S.session.shop] : null; }
+function phase(){
+  var s=S.session;
+  if(!s || s.status==="idle" || !shop()) return "idle";
+  if(s.status==="closed") return "closed";
+  return S.late ? "late" : "open";
+}
+function roundOrders(){ return S.orders.filter(function(o){ return o.lines && o.lines.length; }); }
+function myOrder(){ for(var i=0;i<S.orders.length;i++){ if(S.orders[i].mine) return S.orders[i]; } return null; }
+function linesCalc(lines, sk){
+  var amt=0, cnt=0; (lines||[]).forEach(function(l){ var it=ITEMS[l.key]; if(it && it.shop===sk && l.qty>0){ amt+=it.price*l.qty; cnt+=l.qty; } }); return {amt:amt, cnt:cnt};
+}
+function cartLines(){ var sk=S.session&&S.session.shop; return Object.keys(S.cart).filter(function(k){ return S.cart[k]>0 && ITEMS[k] && ITEMS[k].shop===sk; }).sort(function(a,b){ return ITEMS[a].order-ITEMS[b].order; }).map(function(k){ return {key:k, qty:S.cart[k]}; }); }
+function linesText(lines){ return lines.filter(function(l){ return ITEMS[l.key]; }).map(function(l){ return ITEMS[l.key].label+"×"+l.qty; }).join("、"); }
+function aggregate(){
+  var sk=S.session.shop, m={}; roundOrders().forEach(function(o){ o.lines.forEach(function(l){ var it=ITEMS[l.key]; if(it && it.shop===sk && l.qty>0) m[l.key]=(m[l.key]||0)+l.qty; }); });
+  return Object.keys(m).sort(function(a,b){ return ITEMS[a].order-ITEMS[b].order; }).map(function(k){ return {key:k, qty:m[k]}; });
+}
+function syncFromServer(){
+  var r=S.session && S.session.round;
+  if(r !== S.round){ S.round=r; S.dirty=false; }
+  if(S.dirty) return;
+  var mo=myOrder(); S.cart={};
+  if(mo) mo.lines.forEach(function(l){ S.cart[l.key]=l.qty; });
+  if(mo && mo.name) S.name=mo.name;
+}
+
+/* ---------- render ---------- */
+function render(){
+  var all=["hdr","admin","status","menu","pay","board","bar"];
+  if(!API_URL || API_URL.indexOf("script.google.com")<0){
+    patch($("hdr"), '<div class="empty"><b>還沒設定後端網址</b>請把 index.html 開頭的 API_URL 換成你的 Apps Script 網址。</div>');
+    all.slice(1).forEach(function(id){ patch($(id), ""); }); return;
+  }
+  if(S.loading){ patch($("hdr"), '<div class="empty">載入中…</div>'); return; }
+  if(S.failed){
+    patch($("hdr"), '<div class="empty"><b>連不到點餐資料</b>請稍後重新整理，或請主揪確認後端設定。</div>');
+    all.slice(1).forEach(function(id){ patch($(id), ""); }); return;
+  }
+  var ph=phase(), sh=shop();
+  renderHeader(ph, sh); renderAdmin(ph, sh); renderStatus(ph, sh); renderMenu(ph, sh); renderPay(ph, sh); renderBoard(ph, sh); renderBar(ph, sh); renderFoot();
+  S.lastPhase=ph;
+}
+
+function renderHeader(ph, sh){
+  var seal = { idle:["未開單","muted"], open:["收單中",""], late:["已截止",""], closed:["已結單",""] }[ph];
+  var stamp = S.lastPhase && S.lastPhase!==ph && ph!=="idle" ? " stamp" : "";
+  var h='<header class="hdr"><div>';
+  if(ph==="idle"){
+    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">今天訂便當</h1><p class="meta">等主揪選好店家就能開始點。</p>';
+  } else {
+    h+='<div class="date">'+esc(prettyDate(S.session.date))+'　截止 '+esc(S.session.deadline)+'</div>';
+    h+='<h1 class="shop">'+esc(sh.name)+'</h1>';
+    h+='<p class="meta"><a href="tel:'+esc(sh.phone)+'">'+esc(sh.phone)+'</a>　'+esc(sh.addr)+'</p>';
+    h+='<p class="rule-line">'+esc(sh.rule.label)+'　<span style="font-weight:400;color:var(--muted)">'+esc(sh.note)+'</span></p>';
+  }
+  h+='</div><div class="seal '+seal[1]+stamp+'" aria-label="狀態：'+seal[0]+'">'+seal[0]+'</div></header>';
+  patch($("hdr"), h);
+}
+
+function renderAdmin(ph, sh){
+  if(!S.isAdmin){ patch($("admin"), ""); return; }
+  var dis=S.busy?' disabled':'';
+  var h='<section class="panel owner" aria-label="主揪設定">';
+  if(ph==="idle"){
+    h+='<h2>今天訂哪一家？</h2><div class="shops">';
+    Object.keys(SHOPS).forEach(function(k){
+      h+='<button class="shopbtn" data-act="pick" data-shop="'+k+'" aria-pressed="'+(S.adminShop===k)+'"><b>'+esc(SHOPS[k].name)+'</b><span>'+esc(SHOPS[k].rule.label)+'</span></button>';
+    });
+    h+='</div><div class="row-ctl"><label class="inline">截止時間 <input id="dl" type="time" value="'+esc(S.adminDeadline)+'" data-in="dl"></label>';
+    h+='<button class="btn primary" data-act="open"'+dis+'>開始收單</button></div>';
+    h+='<p class="hint">開單後把這頁的網址丟到群組，同事就能點餐。</p>';
+  } else if(ph==="open" || ph==="late"){
+    h+='<h2>'+(ph==="late"?"已過截止時間，大家暫時不能點":"收單中")+'</h2><div class="row-ctl">';
+    h+='<label class="inline">截止時間 <input id="dl" type="time" value="'+esc(S.adminDeadline)+'" data-in="dl"></label>';
+    h+='<button class="btn ghost" data-act="setdl"'+dis+'>更新截止時間</button>';
+    h+='<button class="btn primary" data-act="close"'+dis+'>結單</button></div>';
+  } else {
+    h+='<h2>已結單</h2><div class="row-ctl">';
+    h+='<button class="btn ghost" data-act="reopen"'+dis+'>重新開放點餐</button>';
+    h+='<button class="btn danger" data-act="newround"'+dis+'>'+(S.confirmNew?"確定清除所有訂單？":"開新一輪")+'</button></div>';
+    h+='<p class="hint">開新一輪會清除這次所有人的訂單，回到選店家。</p>';
+  }
+  h+='</section>';
+  patch($("admin"), h);
+}
+
+function renderStatus(ph, sh){
+  if(ph==="idle"){ patch($("status"), S.isAdmin ? "" : '<div class="empty"><b>今天還沒開放點餐</b>主揪開單後這頁會自動更新。</div>'); return; }
+  var ords=roundOrders(), amt=0, cnt=0;
+  ords.forEach(function(o){ var c=linesCalc(o.lines, S.session.shop); amt+=c.amt; cnt+=c.cnt; });
+  var r=sh.rule, val = r.type==="amount" ? amt : cnt, ok = val>=r.min, pct=Math.min(100, Math.round(val/r.min*100));
+  var msg = ok ? "已達外送門檻" : (r.type==="amount" ? "還差 "+(r.min-amt)+" 元" : "還差 "+(r.min-cnt)+" 份");
+  var h='<section class="panel"><div class="th-top"><span class="th-msg '+(ok?"ok":"no")+'">'+msg+'</span>';
+  h+='<span class="num">'+ords.length+' 人點餐，共 '+cnt+' 份，$'+amt+'</span></div>';
+  h+='<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="'+r.min+'" aria-valuenow="'+val+'"><i class="'+(ok?"ok":"")+'" style="width:'+pct+'%"></i></div>';
+  h+='</section>';
+  patch($("status"), h);
+}
+
+function renderMenu(ph, sh){
+  if(ph!=="open"){ patch($("menu"), ""); return; }
+  var h='';
+  sh.groups.forEach(function(g){
+    h+='<section class="sec"><h2>'+esc(g.title)+(g.sub?' <small>'+esc(g.sub)+'</small>':'')+'</h2>';
+    g.items.forEach(function(it){
+      var any=false, vh='';
+      it.v.forEach(function(v){
+        var key=it.id+"."+v[0], q=S.cart[key]||0; if(q>0) any=true;
+        vh+='<div class="var"><span class="vlabel">'+(v[1]?esc(v[1])+' ':'')+'<b class="num">$'+v[2]+'</b></span>';
+        vh+='<div class="stepper"><button data-act="dec" data-key="'+key+'" aria-label="減少 '+esc(ITEMS[key].label)+'"'+(q?'':' disabled')+'>−</button><span class="num" aria-live="polite">'+q+'</span><button data-act="inc" data-key="'+key+'" aria-label="增加 '+esc(ITEMS[key].label)+'">+</button></div>';
+        vh+='</div>';
+      });
+      h+='<div class="item'+(any?' on':'')+'"><div class="iname">'+esc(it.name)+(it.rec?'<span class="tag">推薦</span>':'')+(it.wk?'<span class="tag t2">平日中午</span>':'')+(it.sub?'<div class="vlabel">'+esc(it.sub)+'</div>':'')+'</div><div class="vars">'+vh+'</div></div>';
+    });
+    h+='</section>';
+  });
+  patch($("menu"), h);
+}
+
+function renderPay(ph, sh){
+  var mo=myOrder();
+  if(ph==="idle" || !mo){ patch($("pay"), ""); return; }
+  var c=linesCalc(mo.lines, S.session.shop);
+  var h='<section class="panel pay"><h2>付款</h2>';
+  if(mo.paid){
+    h+='<p class="paybig"><span class="paidtag">已付款</span>　<span class="num">$'+c.amt+'</span></p><p class="hint">主揪已確認收到，謝謝！</p>';
+  } else {
+    h+='<p class="paybig">請付 <b class="num">$'+c.amt+'</b></p>';
+    h+='<div class="qrwrap"><img id="qrimg" src="'+esc(QR_IMAGE)+'" alt="主揪的台灣Pay 收款碼" onerror="this.style.display=\'none\';document.getElementById(\'qrmiss\').style.display=\'block\'">';
+    h+='<p id="qrmiss" class="hint" style="display:none">主揪還沒放收款碼，請直接付現。</p></div>';
+    h+='<p class="hint">用銀行 App 的台灣Pay 掃碼付款，金額請自己輸入。用手機開這頁的話，請長按圖片存到相簿，再到銀行 App 掃碼時選「從相簿選取」。付完後主揪會幫你勾「已付」。</p>';
+  }
+  h+='</section>';
+  patch($("pay"), h);
+}
+
+function summaryText(){
+  var sh=shop(), agg=aggregate(), c=0, a=0;
+  var t=sh.name+" 訂單 "+prettyDate(S.session.date)+"\n";
+  agg.forEach(function(l){ t+=ITEMS[l.key].label+" ×"+l.qty+"\n"; c+=l.qty; a+=ITEMS[l.key].price*l.qty; });
+  t+="共 "+c+" 份，$"+a;
+  return t;
+}
+
+function renderBoard(ph, sh){
+  if(ph==="idle"){ patch($("board"), ""); return; }
+  var ords=roundOrders().slice().sort(function(a,b){ return (a.updatedAt||0)-(b.updatedAt||0); });
+  if(!ords.length){ patch($("board"), ph==="open" ? "" : '<div class="empty"><b>這輪沒有人點餐</b></div>'); return; }
+  var agg=aggregate(), cnt=0, amt=0, h='';
+  h+='<section class="panel"><h2>品項統計</h2><ul class="agg">';
+  agg.forEach(function(l){ var it=ITEMS[l.key]; cnt+=l.qty; amt+=it.price*l.qty; h+='<li><span>'+esc(it.label)+'</span><span class="num">×'+l.qty+'</span></li>'; });
+  h+='</ul><div class="tot"><span>共 '+cnt+' 份</span><span class="num">$'+amt+'</span></div>';
+  if(S.isAdmin && ph!=="open"){
+    h+='<h2 style="margin-top:18px">打電話用</h2><textarea id="sumtext" readonly>'+esc(summaryText())+'</textarea>';
+    h+='<div class="row-ctl" style="margin-top:8px"><button class="btn ghost" data-act="copy">複製訂單文字</button></div>';
+  }
+  h+='</section><section class="panel"><h2>每個人</h2><ul class="people">';
+  ords.forEach(function(o){
+    var c=linesCalc(o.lines, S.session.shop);
+    h+='<li><span class="who">'+esc(o.name||"未填名字")+(o.mine?'（你）':'')+'</span><span class="amt num">$'+c.amt+'</span>';
+    h+='<span class="what">'+esc(linesText(o.lines))+'</span>';
+    if(S.isAdmin) h+='<label class="paid inline" style="justify-content:flex-end"><input type="checkbox" data-paid="'+esc(o.pid)+'"'+(o.paid?' checked':'')+'> 已付</label>';
+    else h+='<span class="paid">'+(o.paid?'<span class="paidtag">已付</span>':'')+'</span>';
+    h+='</li>';
+  });
+  h+='</ul></section>';
+  patch($("board"), h);
+}
+
+function renderBar(ph, sh){
+  var m=document.querySelector("main");
+  if(ph!=="open"){ patch($("bar"), ""); m.style.paddingBottom="40px"; return; }
+  m.style.paddingBottom="";
+  var lines=cartLines(), c=linesCalc(lines, S.session.shop), mo=myOrder();
+  var label = !mo ? "送出訂單" : (S.dirty ? "更新訂單" : "已送出");
+  var dis = S.busy || (!S.dirty && !!mo) || (!mo && !lines.length);
+  var h='<div class="dock"><div class="dock-in">';
+  h+='<div class="nm"><label for="nm" style="font-size:14px;white-space:nowrap">名字</label><input id="nm" type="text" maxlength="20" placeholder="隨便打，可以辨識就好" value="'+esc(S.name)+'" data-in="nm" autocomplete="name"></div>';
+  h+='<div class="sum num">'+c.cnt+' 份　<b>$'+c.amt+'</b></div>';
+  h+='<div class="acts">'+(mo?'<button class="linkbtn" data-act="cancel"'+(S.busy?' disabled':'')+'>取消訂單</button>':'')+'<button class="btn primary" data-act="submit"'+(dis?' disabled':'')+'>'+label+'</button></div>';
+  h+='</div></div>';
+  patch($("bar"), h);
+}
+
+function renderFoot(){
+  var h='<footer class="foot">';
+  if(S.isAdmin) h+='主揪模式　<button class="linkbtn" data-act="logout">登出</button>';
+  else if(S.showLogin) h+='<div class="row-ctl" style="justify-content:center"><input id="lp" type="password" placeholder="主揪密碼" data-in="lp" autocomplete="current-password"><button class="btn ghost" data-act="login"'+(S.busy?' disabled':'')+'>登入</button></div>';
+  else h+='<button class="linkbtn" data-act="showlogin">主揪登入</button>';
+  h+='</footer>';
+  patch($("foot"), h);
+}
+
+/* ---------- actions ---------- */
+function run(params, okMsg, after){
+  if(S.busy) return; S.busy=true; render();
+  return api(params).then(function(res){
+    if(!res || !res.ok){ toast(res && res.error || "操作失敗"); return; }
+    if(after) after(res);
+    if(okMsg) toast(okMsg);
+    return refresh();
+  }).catch(function(){ toast("連線失敗，請稍後再試"); })
+  .then(function(){ S.busy=false; render(); });
+}
+function adminRun(action, extra, okMsg){
+  var p={ action:action, pw:S.pw }; if(extra) Object.keys(extra).forEach(function(k){ p[k]=extra[k]; });
+  return run(p, okMsg);
+}
+
+document.addEventListener("click", function(ev){
+  var b=ev.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var act=b.getAttribute("data-act");
+  if(act!=="newround") S.confirmNew=false;
+  if(act==="inc" || act==="dec"){
+    var k=b.getAttribute("data-key"), q=(S.cart[k]||0)+(act==="inc"?1:-1);
+    if(q<=0) delete S.cart[k]; else S.cart[k]=Math.min(q,99);
+    S.dirty=true; render(); return;
+  }
+  if(act==="pick"){ S.adminShop=b.getAttribute("data-shop"); render(); return; }
+  if(act==="submit"){
+    var lines=cartLines(), nm=S.name.trim();
+    if(!nm){ toast("請先填名字"); var n=$("nm"); if(n) n.focus(); return; }
+    lsSet("bento_name", nm);
+    var mo=myOrder();
+    if(!lines.length){ run({action:"cancel"}, "已取消你的訂單", function(){ S.dirty=false; }); return; }
+    run({action:"submit", name:nm, lines:lines}, mo ? "訂單已更新" : "訂單已送出", function(){ S.dirty=false; });
+    return;
+  }
+  if(act==="cancel"){ run({action:"cancel"}, "已取消你的訂單", function(){ S.cart={}; S.dirty=false; }); return; }
+  if(act==="open"){ if(!S.adminDeadline){ toast("請設定截止時間"); return; } adminRun("admin_open", {shop:S.adminShop, deadline:S.adminDeadline}, "已開始收單，把網址丟到群組吧"); return; }
+  if(act==="setdl"){ if(!S.adminDeadline){ toast("請設定截止時間"); return; } adminRun("admin_setdl", {deadline:S.adminDeadline}, "截止時間已更新"); return; }
+  if(act==="close"){ adminRun("admin_close", null, "已結單"); return; }
+  if(act==="reopen"){ if(S.late) toast("截止時間已過，記得更新截止時間"); adminRun("admin_reopen", null, null); return; }
+  if(act==="newround"){
+    if(!S.confirmNew){ S.confirmNew=true; render(); return; }
+    S.confirmNew=false; adminRun("admin_newround", null, "已清除，可以重新選店家"); return;
+  }
+  if(act==="showlogin"){ S.showLogin=true; render(); var lp=$("lp"); if(lp) lp.focus(); return; }
+  if(act==="login"){
+    var pw=S.loginPw; if(!pw){ toast("請輸入主揪密碼"); return; }
+    S.busy=true; render();
+    api({action:"checkAdmin", pw:pw}).then(function(res){
+      if(res && res.ok){ S.pw=pw; S.isAdmin=true; S.showLogin=false; S.loginPw=""; lsSet("bento_admin_pw", pw); toast("已切換成主揪模式"); }
+      else toast("密碼錯誤");
+    }).catch(function(){ toast("連線失敗，請稍後再試"); }).then(function(){ S.busy=false; render(); });
+    return;
+  }
+  if(act==="logout"){ S.isAdmin=false; S.pw=""; lsSet("bento_admin_pw",""); render(); return; }
+  if(act==="copy"){
+    var ta=$("sumtext"), txt=summaryText();
+    var done=function(){ toast("已複製"); };
+    var fallback=function(){ if(ta){ ta.focus(); ta.select(); try{ if(document.execCommand("copy")){ done(); return; } }catch(e){} } toast("請長按文字框手動複製"); };
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, fallback); } else fallback();
+    return;
+  }
+});
+
+document.addEventListener("input", function(ev){
+  var k=ev.target.getAttribute && ev.target.getAttribute("data-in");
+  if(k==="nm"){ S.name=ev.target.value; S.dirty=true; $("bar")._h=null; renderBar(phase(), shop()); }
+  if(k==="dl"){ S.adminDeadline=ev.target.value; }
+  if(k==="lp"){ S.loginPw=ev.target.value; }
+});
+document.addEventListener("keydown", function(ev){
+  if(ev.key==="Enter" && ev.target.id==="lp"){ var b=document.querySelector('[data-act="login"]'); if(b) b.click(); }
+});
+
+document.addEventListener("change", function(ev){
+  var pid=ev.target.getAttribute && ev.target.getAttribute("data-paid");
+  if(!pid) return;
+  var val=ev.target.checked;
+  api({action:"admin_paid", pw:S.pw, pid:pid, paid:val}).then(function(res){
+    if(!res || !res.ok){ ev.target.checked=!val; toast(res && res.error || "更新失敗"); return; }
+    refresh();
+  }).catch(function(){ ev.target.checked=!val; toast("連線失敗，請稍後再試"); });
+});
+
+/* ---------- boot ---------- */
+(function(){
+  render();
+  if(!API_URL || API_URL.indexOf("script.google.com")<0) return;
+  var start = S.pw ? api({action:"checkAdmin", pw:S.pw}).then(function(res){ S.isAdmin=!!(res&&res.ok); if(!S.isAdmin){ S.pw=""; lsSet("bento_admin_pw",""); } }).catch(function(){}) : Promise.resolve();
+  start.then(refresh);
+  setInterval(function(){ if(!document.hidden && !S.busy) refresh(); }, 8000);
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) refresh(); });
+})();
+</script>
+</body>
+</html>
