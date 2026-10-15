@@ -240,7 +240,7 @@ var TOKEN = lsGet("bento_token"); if(!TOKEN){ TOKEN=newToken(); lsSet("bento_tok
 
 var S = {
   loading:true, failed:false, session:null, late:false, orders:[], cart:{}, name:lsGet("bento_name"), dirty:false, round:null,
-  pw:lsGet("bento_admin_pw"), isAdmin:false, showLogin:false, loginPw:"",
+  pw:lsGet("bento_admin_pw"), isAdmin:!!lsGet("bento_admin_pw"), showLogin:false, loginPw:"",
   adminShop:"chunfu", adminDeadline:"10:30", confirmNew:false, busy:false, lastPhase:null, lastJson:""
 };
 
@@ -258,13 +258,26 @@ function patch(el, html){
 }
 
 /* ---------- API ---------- */
-function api(params){
+function api(params, timeoutMs){
   params.token = TOKEN;
-  return fetch(API_URL, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body:JSON.stringify(params) })
-    .then(function(r){ return r.json(); });
+  var ctl = timeoutMs && window.AbortController ? new AbortController() : null;
+  var timer = ctl ? setTimeout(function(){ ctl.abort(); }, timeoutMs) : 0;
+  return fetch(API_URL, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body:JSON.stringify(params), signal: ctl ? ctl.signal : undefined })
+    .then(function(r){ clearTimeout(timer); return r.json(); }, function(e){ clearTimeout(timer); throw e; });
 }
+/* Google 的網頁應用程式偶爾會卡十幾秒，逾時就重送，通常重送一次就很快 */
+function apiRetry(params, tries){
+  return api(params, 8000).catch(function(e){
+    if(tries>1) return apiRetry(params, tries-1);
+    throw e;
+  });
+}
+var refreshing=false;
 function refresh(){
-  return api({ action:"state" }).then(function(res){
+  if(refreshing) return Promise.resolve();
+  refreshing=true;
+  return apiRetry({ action:"state" }, S.loading ? 4 : 1).then(function(res){
+    refreshing=false;
     if(!res || !res.ok) throw new Error(res && res.error || "讀取失敗");
     var json=JSON.stringify([res.session,res.late,res.orders]);
     S.failed=false;
@@ -275,7 +288,7 @@ function refresh(){
       if(S.session && SHOPS[S.session.shop]) S.adminShop=S.session.shop;
     }
     S.loading=false; syncFromServer(); render();
-  }).catch(function(){ if(S.loading){ S.failed=true; S.loading=false; render(); } });
+  }).catch(function(){ refreshing=false; if(S.loading){ S.failed=true; S.loading=false; render(); } });
 }
 
 /* ---------- derived ---------- */
@@ -559,8 +572,9 @@ document.addEventListener("change", function(ev){
 (function(){
   render();
   if(!API_URL || API_URL.indexOf("script.google.com")<0) return;
-  var start = S.pw ? api({action:"checkAdmin", pw:S.pw}).then(function(res){ S.isAdmin=!!(res&&res.ok); if(!S.isAdmin){ S.pw=""; lsSet("bento_admin_pw",""); } }).catch(function(){}) : Promise.resolve();
-  start.then(refresh);
+  // 主揪檢查和讀訂單同時送，不要一個等一個
+  if(S.pw) apiRetry({action:"checkAdmin", pw:S.pw}, 4).then(function(res){ S.isAdmin=!!(res&&res.ok); if(!S.isAdmin){ S.pw=""; lsSet("bento_admin_pw",""); } render(); }).catch(function(){});
+  refresh();
   setInterval(function(){ if(!document.hidden && !S.busy) refresh(); }, 8000);
   document.addEventListener("visibilitychange", function(){ if(!document.hidden) refresh(); });
 })();
