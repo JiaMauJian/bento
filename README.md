@@ -25,12 +25,12 @@
 var API_URL = "請貼上 Apps Script 網頁應用程式網址";
 ```
 
-收款碼：把台灣Pay 收款碼截圖存成 `qr.png`，跟 `index.html` 放在一起。沒有放的話，頁面會請同事付現。
+付款：頁面上只顯示金額，付款方式由主揪在 LINE 群組說明。
 
 ## 三、放到 GitHub Pages
 
 1. 登入 GitHub，右上角「+ > New repository」，名稱例如 `bento`，選 **Public**，按「Create repository」。
-2. 在新 repo 頁面點「uploading an existing file」，把 `index.html` 和 `qr.png` 拖進去，按「Commit changes」。
+2. 在新 repo 頁面點「uploading an existing file」，把 `index.html` 拖進去，按「Commit changes」。
 3. 到 repo 的「Settings > Pages」，Source 選「Deploy from a branch」，Branch 選 `main`、資料夾選 `/ (root)`，按「Save」。
 4. 等一兩分鐘，頁面上方會出現網址：`https://你的帳號.github.io/bento/`，把它丟到群組就可以了。
 
@@ -41,6 +41,6 @@ var API_URL = "請貼上 Apps Script 網頁應用程式網址";
 
 ## 注意
 
-- Public repo 代表 `index.html` 和 `qr.png` 任何人都看得到，收款碼也會公開在網路上。密碼不在這些檔案裡，存在 Apps Script 的指令碼屬性中。
+- Public repo 代表 `index.html` 任何人都看得到。密碼不在這個檔案裡，存在 Apps Script 的指令碼屬性中。
 - 不用登入的代價是只能靠同事自己填的名字認人，請大家填認得出來的名字。
 - 訂單明細也可以直接在 Google 試算表的 `orders` 工作表查看。

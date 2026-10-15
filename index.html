@@ -136,8 +136,6 @@ textarea{width:100%;min-height:150px;background:var(--paper);border:1px solid va
 
 .paybig{font-size:18px;margin:0 0 10px}
 .paybig b{font-size:28px;color:var(--seal)}
-.qrwrap{display:flex;justify-content:center}
-.qrwrap img{width:min(260px,100%);height:auto;border-radius:8px;border:1px solid var(--rule);background:#fff;padding:8px}
 .foot{text-align:center;color:var(--muted);font-size:14px;margin:30px 0 10px}
 </style>
 </head>
@@ -157,8 +155,6 @@ textarea{width:100%;min-height:150px;background:var(--paper);border:1px solid va
 <script>
 /* ===== 設定：部署 Apps Script 後，把網址貼在這裡 ===== */
 var API_URL = "https://script.google.com/macros/s/AKfycbxs_Yl3rCIQT2N-IdSriyyOXyPEXxkVaoDTKh-xsR6neQNh0_wUgorux4DF6ZmnXON7/exec";
-/* 收款碼圖檔名稱，跟 index.html 放在同一層 */
-var QR_IMAGE = "qr.png";
 /* ==================================================== */
 
 
@@ -412,9 +408,7 @@ function renderPay(ph, sh){
     h+='<p class="paybig"><span class="paidtag">已付款</span>　<span class="num">$'+c.amt+'</span></p><p class="hint">主揪已確認收到，謝謝！</p>';
   } else {
     h+='<p class="paybig">請付 <b class="num">$'+c.amt+'</b></p>';
-    h+='<div class="qrwrap"><img id="qrimg" src="'+esc(QR_IMAGE)+'" alt="主揪的台灣Pay 收款碼" onerror="this.style.display=\'none\';document.getElementById(\'qrmiss\').style.display=\'block\'">';
-    h+='<p id="qrmiss" class="hint" style="display:none">主揪還沒放收款碼，請直接付現。</p></div>';
-    h+='<p class="hint">用銀行 App 的台灣Pay 掃碼付款，金額請自己輸入。用手機開這頁的話，請長按圖片存到相簿，再到銀行 App 掃碼時選「從相簿選取」。付完後主揪會幫你勾「已付」。</p>';
+    h+='<p class="hint">付款方式主揪會在 LINE 群組說明。付完後主揪會幫你勾「已付」。</p>';
   }
   h+='</section>';
   patch($("pay"), h);
