@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>便當菜單</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍱</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F5F2; --sheet:#FFFFFF; --ink:#1F2629; --muted:#687175; --rule:#DCE1DD;
+  --seal:#BE3426; --seal-soft:#FBE9E6; --leaf:#2E6A49; --leaf-soft:#E2EFE6;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  color-scheme:light;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#141819; --sheet:#1D2224; --ink:#E8ECEA; --muted:#9AA3A6; --rule:#30383A;
+    --seal:#E5594A; --seal-soft:#3A1F1C; --leaf:#72C394; --leaf-soft:#1C3226;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141819; --sheet:#1D2224; --ink:#E8ECEA; --muted:#9AA3A6; --rule:#30383A;
+  --seal:#E5594A; --seal-soft:#3A1F1C; --leaf:#72C394; --leaf-soft:#1C3226;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-text-size-adjust:100%}
+main{max-width:680px;margin:0 auto;padding:20px 16px calc(40px + env(safe-area-inset-bottom,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+.top{font-family:var(--serif);font-weight:900;font-size:clamp(28px,8vw,40px);margin:4px 0 14px;letter-spacing:.04em}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:sticky;top:0;z-index:5;background:var(--paper);padding:8px 0}
+.tab{text-align:left;background:var(--sheet);border:2px solid var(--rule);border-radius:10px;padding:10px 12px}
+.tab b{display:block;font-family:var(--serif);font-size:19px}
+.tab span{font-size:13px;color:var(--muted)}
+.tab[aria-selected="true"]{border-color:var(--seal);background:var(--seal-soft)}
+
+.info{background:var(--sheet);border:1px solid var(--rule);border-left:4px solid var(--seal);border-radius:10px;padding:14px 16px;margin:10px 0 6px}
+.info h2{font-family:var(--serif);font-weight:900;font-size:26px;margin:0 0 6px;letter-spacing:.04em}
+.info dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:15px}
+.info dt{color:var(--muted)}
+.info dd{margin:0}
+.info a{color:var(--ink);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.rule{color:var(--seal);font-weight:700}
+
+.sec{margin:24px 0}
+.sec h3{display:flex;align-items:baseline;gap:8px;font-size:17px;margin:0 0 4px;border-bottom:1px solid var(--rule);padding-bottom:6px}
+.sec h3 small{font-weight:400;color:var(--muted);font-size:13px}
+.item{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px;padding:9px 0;border-bottom:1px dashed var(--rule)}
+.iname{font-weight:500;flex:1 1 160px}
+.sub{display:block;font-size:13px;color:var(--muted);font-weight:400}
+.tag{display:inline-block;font-size:12px;font-weight:500;color:var(--seal);border:1px solid var(--seal);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:2px;line-height:1.5}
+.tag.t2{color:var(--muted);border-color:var(--muted)}
+.prices{display:flex;flex-wrap:wrap;gap:2px 14px;justify-content:flex-end;font-size:15px}
+.prices span{white-space:nowrap;color:var(--muted)}
+.prices b{color:var(--ink);font-weight:700}
+.foot{text-align:center;color:var(--muted);font-size:13px;margin:30px 0 0}
+</style>
+</head>
+<body>
+<main>
+  <h1 class="top">便當菜單</h1>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div id="shop"></div>
+  <p class="foot">價格以店家當日為準</p>
+</main>
+
+<script>
+var SHOPS = {
+  chunfu: {
+    name: "春福家", phone: "06-5996965", addr: "新市區中正路287號",
+    rule: "滿 500 元才外送",
+    note: "會議便當需提前三天預訂，請直接跟店家訂。",
+    groups: [
+      { title: "豬肉", items: [
+        { name: "燒肉", v: [["便當",90],["單點",50]] },
+        { name: "薑汁燒肉", v: [["便當",95],["單點",60]] },
+        { name: "家傳排骨", rec: 1, v: [["便當",100],["單點",60]] },
+        { name: "日式豬排", v: [["便當",100],["單點",70]] },
+        { name: "炸紅糟肉", rec: 1, v: [["便當",110],["單點",70]] }
+      ]},
+      { title: "雞肉", items: [
+        { name: "滷雞腿", v: [["便當",95],["單點",65]] },
+        { name: "三杯雞腿肉", v: [["便當",100],["單點",70]] },
+        { name: "蜜汁雞腿排", v: [["便當",120],["單點",80]] },
+        { name: "椒鹽雞腿排", rec: 1, v: [["便當",120],["單點",80]] },
+        { name: "酥炸雞腿", rec: 1, v: [["便當",125],["單點",85]] },
+        { name: "椒麻雞腿排", rec: 1, v: [["便當",135],["單點",95]] }
+      ]},
+      { title: "魚", items: [
+        { name: "椒鹽魚排", v: [["便當",85],["單點",50]] },
+        { name: "香煎鮭魚排", v: [["便當",110],["單點",70]] }
+      ]},
+      { title: "蔬食", items: [
+        { name: "蔬食便當", sub: "6 菜，方便素", v: [["便當",80]] }
+      ]}
+    ]
+  },
+  yang: {
+    name: "洋食堂金咖啡", phone: "06-5815257", addr: "善化區興農路10號",
+    rule: "10 份以上才外送",
+    note: "價格為外帶價。",
+    groups: [
+      { title: "餐盒", items: [
+        { name: "主廚雞腿飯", v: [["",125]] },
+        { name: "主廚燒肉飯", v: [["",125]] },
+        { name: "越式烤肉飯", v: [["",125]] },
+        { name: "阿嬤手作獅子頭飯", v: [["",125]] },
+        { name: "舒肥果仁嫩雞胸飯", v: [["",130]] },
+        { name: "主廚鮭魚飯", v: [["",130]] },
+        { name: "炙燒胡椒鯖魚飯", v: [["",130]] },
+        { name: "古早味排骨飯", v: [["",135]] },
+        { name: "乾煎鱸魚排飯", v: [["",140]] },
+        { name: "虱目魚肚飯", wk: 1, v: [["豆豉",140],["乾煎",140]] },
+        { name: "經典烤魷魚飯", wk: 1, v: [["",155]] },
+        { name: "爆炒泡菜年糕燒肉飯", v: [["",165]] },
+        { name: "雙拼（雞腿＋鮭魚）飯", v: [["",175]] },
+        { name: "主廚牛肉飯", v: [["",220]] }
+      ]},
+      { title: "義大利麵", sub: "附濃湯", items: [
+        { name: "義大利麵", v: [["青醬蛤蜊",200],["奶油雞腿",200],["紅醬豬排",200]] },
+        { name: "煙花女魷魚義大利麵", v: [["",250]] }
+      ]},
+      { title: "焗烤", sub: "附濃湯", items: [
+        { name: "焗烤義大利麵", v: [["青醬蛤蜊",250],["奶油雞腿",250],["紅醬豬排",250]] },
+        { name: "焗烤雞肉飯", v: [["白醬",250],["紅醬",250]] }
+      ]},
+      { title: "沙拉", items: [
+        { name: "健康時蔬沙拉", v: [["胡麻醬",100],["油醋醬",100]] },
+        { name: "主廚雞腿沙拉", sub: "附濃湯", v: [["胡麻醬",150],["油醋醬",150]] },
+        { name: "舒肥雞胸沙拉", sub: "附濃湯", v: [["胡麻醬",150],["油醋醬",150]] }
+      ]}
+    ]
+  }
+};
+
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+function show(key){
+  if(!SHOPS[key]) key = "chunfu";
+  var sh = SHOPS[key], h = "";
+  h += '<section class="info"><h2>'+esc(sh.name)+'</h2><dl>';
+  h += '<dt>電話</dt><dd><a href="tel:'+esc(sh.phone)+'">'+esc(sh.phone)+'</a></dd>';
+  h += '<dt>地址</dt><dd>'+esc(sh.addr)+'</dd>';
+  h += '<dt>外送</dt><dd class="rule">'+esc(sh.rule)+'</dd>';
+  h += '<dt>備註</dt><dd>'+esc(sh.note)+'</dd>';
+  h += '</dl></section>';
+  sh.groups.forEach(function(g){
+    h += '<section class="sec"><h3>'+esc(g.title)+(g.sub ? ' <small>'+esc(g.sub)+'</small>' : '')+'</h3>';
+    g.items.forEach(function(it){
+      h += '<div class="item"><div class="iname">'+esc(it.name)
+        + (it.rec ? '<span class="tag">推薦</span>' : '')
+        + (it.wk ? '<span class="tag t2">平日中午</span>' : '')
+        + (it.sub ? '<span class="sub">'+esc(it.sub)+'</span>' : '')
+        + '</div><div class="prices">';
+      it.v.forEach(function(v){ h += '<span>'+(v[0] ? esc(v[0])+' ' : '')+'<b class="num">$'+v[1]+'</b></span>'; });
+      h += '</div></div>';
+    });
+    h += '</section>';
+  });
+  document.getElementById("shop").innerHTML = h;
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(b){
+    b.setAttribute("aria-selected", b.getAttribute("data-shop") === key);
+  });
+  if(location.hash !== "#"+key) history.replaceState(null, "", "#"+key);
+}
+
+(function(){
+  var t = "";
+  Object.keys(SHOPS).forEach(function(k){
+    t += '<button class="tab" role="tab" data-shop="'+k+'"><b>'+esc(SHOPS[k].name)+'</b><span>'+esc(SHOPS[k].rule)+'</span></button>';
+  });
+  document.getElementById("tabs").innerHTML = t;
+  document.addEventListener("click", function(ev){
+    var b = ev.target.closest(".tab"); if(!b) return;
+    show(b.getAttribute("data-shop")); window.scrollTo(0, 0);
+  });
+  show(location.hash.slice(1));
+})();
+</script>
+</body>
+</html>
