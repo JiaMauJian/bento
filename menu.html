@@ -34,10 +34,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .num{font-variant-numeric:tabular-nums}
 
 .top{font-family:var(--serif);font-weight:900;font-size:clamp(28px,8vw,40px);margin:4px 0 14px;letter-spacing:.04em}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:sticky;top:0;z-index:5;background:var(--paper);padding:8px 0}
-.tab{text-align:left;background:var(--sheet);border:2px solid var(--rule);border-radius:10px;padding:10px 12px}
-.tab b{display:block;font-family:var(--serif);font-size:19px}
-.tab span{font-size:13px;color:var(--muted)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:sticky;top:0;z-index:5;background:var(--paper);padding:8px 0}
+.tab{text-align:left;background:var(--sheet);border:2px solid var(--rule);border-radius:10px;padding:8px 10px;min-width:0}
+.tab b{display:block;font-family:var(--serif);font-size:17px;line-height:1.3}
+.tab span{display:block;font-size:12px;line-height:1.4;color:var(--muted)}
 .tab[aria-selected="true"]{border-color:var(--seal);background:var(--seal-soft)}
 
 .info{background:var(--sheet);border:1px solid var(--rule);border-left:4px solid var(--seal);border-radius:10px;padding:14px 16px;margin:10px 0 6px}
@@ -74,7 +74,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 var SHOPS = {
   chunfu: {
     name: "春福家", phone: "06-5996965", addr: "新市區中正路287號",
-    rule: "滿 500 元才外送",
+    rule: "500元外送",
     note: "會議便當需提前三天預訂，請直接跟店家訂。",
     groups: [
       { title: "豬肉", items: [
@@ -134,6 +134,70 @@ var SHOPS = {
         { name: "健康時蔬沙拉", v: [["胡麻醬",100],["油醋醬",100]] },
         { name: "主廚雞腿沙拉", sub: "附濃湯", v: [["胡麻醬",150],["油醋醬",150]] },
         { name: "舒肥雞胸沙拉", sub: "附濃湯", v: [["胡麻醬",150],["油醋醬",150]] }
+      ]}
+    ]
+  },
+  bear: {
+    name: "熊仔廚房", phone: "0977-352-388", addr: "新市區華興街18號",
+    rule: "500元外送",
+    note: "週日晚上及週一公休，臨時公休會在粉專公告。價格 2026/1/1 起適用。",
+    groups: [
+      { title: "炒飯", sub: "可選醬油／番茄口味、加辣；加飯 +$10", items: [
+        { name: "蛋炒飯", v: [["",60]] },
+        { name: "肉絲炒飯", v: [["",80]] },
+        { name: "香腸炒飯", v: [["",80]] },
+        { name: "蝦仁炒飯", v: [["",80]] },
+        { name: "綜合炒飯", v: [["",90]] },
+        { name: "炸豬排炒飯", v: [["",100]] },
+        { name: "炸雞排炒飯", v: [["",100]] },
+        { name: "椒鹽雞丁炒飯", v: [["",100]] },
+        { name: "炸蝦排炒飯", v: [["",100]] },
+        { name: "炸雞腿炒飯", v: [["",100]] },
+        { name: "起司豬排炒飯", v: [["",100]] },
+        { name: "秘製燒肉炒飯", v: [["",100]] },
+        { name: "黃金大腿炒飯", v: [["",120]] }
+      ]},
+      { title: "盒飯", sub: "2 樣配菜＋1 顆蛋；加飯 +$10、加蛋 +$15", items: [
+        { name: "炸豬排飯", v: [["",100]] },
+        { name: "炸雞排飯", v: [["",100]] },
+        { name: "炸蝦排飯", v: [["",100]] },
+        { name: "炸雞腿飯", v: [["",100]] },
+        { name: "打拋豬飯", v: [["",100]] },
+        { name: "椒鹽雞丁飯", v: [["",100]] },
+        { name: "泡菜燒肉飯", v: [["",100]] },
+        { name: "香煎鯖魚飯", v: [["",100]] },
+        { name: "限量爌肉飯", v: [["",100]] },
+        { name: "秘製燒肉飯", v: [["",100]] },
+        { name: "起司豬排飯", v: [["",100]] },
+        { name: "咖哩豬排飯", v: [["",110]] },
+        { name: "咖哩雞排飯", v: [["",110]] },
+        { name: "黃金大腿飯", v: [["",120]] }
+      ]},
+      { title: "單點", items: [
+        { name: "荷包蛋", v: [["",15]] },
+        { name: "炸豬排", v: [["",50]] },
+        { name: "炸雞排", v: [["",50]] },
+        { name: "炸蝦排", v: [["",50]] },
+        { name: "炸雞腿", v: [["",50]] },
+        { name: "椒鹽雞丁", v: [["",50]] },
+        { name: "限量爌肉", v: [["",50]] },
+        { name: "香煎鯖魚", v: [["",50]] },
+        { name: "秘製燒肉", v: [["",50]] },
+        { name: "起司豬排", v: [["",50]] },
+        { name: "黃金大腿", v: [["",70]] }
+      ]},
+      { title: "手工大水餃", sub: "以顆計價", items: [
+        { name: "韭菜", v: [["每顆",10]] },
+        { name: "玉米", v: [["每顆",10]] },
+        { name: "高麗菜", v: [["每顆",10]] },
+        { name: "泡菜", v: [["每顆",12]] },
+        { name: "剝皮辣椒", v: [["每顆",12]] }
+      ]},
+      { title: "湯類", items: [
+        { name: "丸子湯", v: [["",30]] },
+        { name: "味噌湯", v: [["",30]] },
+        { name: "青菜蛋花湯", v: [["",30]] },
+        { name: "綜合丸子湯", v: [["",50]] }
       ]}
     ]
   }
