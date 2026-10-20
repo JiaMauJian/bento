@@ -5,7 +5,7 @@
  */
 
 var SHEET_NAME = "orders";
-var HEADERS = ["round", "token", "pid", "name", "lines", "paid", "updatedAt"];
+var HEADERS = ["round", "token", "pid", "name", "lines", "paid", "updatedAt", "note"];
 var TZ = "Asia/Taipei";
 var SHOP_KEYS = ["chunfu", "yang"];
 
@@ -76,6 +76,8 @@ function sheet_() {
     sh = ss.insertSheet(SHEET_NAME);
     sh.appendRow(HEADERS);
     sh.setFrozenRows(1);
+  } else if (sh.getRange(1, HEADERS.length).getValue() === "") {
+    sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
   }
   return sh;
 }
@@ -92,7 +94,7 @@ function readRows_() {
     try { lines = JSON.parse(v[4] || "[]"); } catch (e) {}
     rows.push({
       row: i + 2, round: String(v[0]), token: String(v[1]), pid: String(v[2]),
-      name: String(v[3]), lines: lines, paid: v[5] === true || v[5] === "TRUE", updatedAt: Number(v[6]) || 0
+      name: String(v[3]), lines: lines, paid: v[5] === true || v[5] === "TRUE", updatedAt: Number(v[6]) || 0, note: String(v[7] || "")
     });
   }
   return rows;
@@ -107,7 +109,7 @@ function state_(token) {
   if (s && s.round) {
     readRows_().forEach(function (r) {
       if (r.round !== String(s.round)) return;
-      orders.push({ pid: r.pid, name: r.name, lines: r.lines, paid: r.paid, updatedAt: r.updatedAt, mine: !!token && r.token === token });
+      orders.push({ pid: r.pid, name: r.name, lines: r.lines, paid: r.paid, updatedAt: r.updatedAt, note: r.note, mine: !!token && r.token === token });
     });
   }
   return { ok: true, session: s, late: isLate_(s), orders: orders };
@@ -133,6 +135,7 @@ function submit_(p) {
   if (!validToken_(p.token)) return { ok: false, error: "瀏覽器識別碼錯誤，請重新整理" };
   var name = String(p.name || "").trim().slice(0, 20);
   if (!name) return { ok: false, error: "請先填名字" };
+  var note = String(p.note || "").trim().slice(0, 50);
   var lines = cleanLines_(p.lines);
   if (!lines || !lines.length) return { ok: false, error: "還沒有點任何東西" };
 
@@ -141,12 +144,12 @@ function submit_(p) {
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
     if (r.round === String(s.round) && r.token === p.token) {
-      sh.getRange(r.row, 4, 1, 4).setValues([[name, JSON.stringify(lines), r.paid, Date.now()]]);
+      sh.getRange(r.row, 4, 1, 5).setValues([[name, JSON.stringify(lines), r.paid, Date.now(), note]]);
       return { ok: true };
     }
   }
   var pid = Utilities.getUuid().replace(/-/g, "").slice(0, 10);
-  sh.appendRow([String(s.round), p.token, pid, name, JSON.stringify(lines), false, Date.now()]);
+  sh.appendRow([String(s.round), p.token, pid, name, JSON.stringify(lines), false, Date.now(), note]);
   return { ok: true };
 }
 

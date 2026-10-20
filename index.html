@@ -34,7 +34,7 @@
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-text-size-adjust:100%}
-main{max-width:680px;margin:0 auto;padding:20px 16px 180px}
+main{max-width:680px;margin:0 auto;padding:20px 16px 225px}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
@@ -129,12 +129,13 @@ textarea{width:100%;min-height:150px;background:var(--paper);border:1px solid va
 .dock-in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center}
 .dock .nm{display:flex;align-items:center;gap:8px;grid-column:1/-1}
 .dock .nm input{flex:1}
+.people .note{grid-column:1/2;font-size:14px;color:var(--seal)}
 .dock .sum{font-size:15px}
 .dock .sum b{font-size:20px}
 .dock .acts{display:flex;gap:8px;align-items:center}
 .linkbtn{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:14px;padding:4px}
 
-.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--sheet);padding:8px 14px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;max-width:90vw}
+.toast{position:fixed;left:50%;bottom:calc(195px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--sheet);padding:8px 14px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;max-width:90vw}
 .toast.show{opacity:1}
 @media (max-width:420px){.shops{grid-template-columns:1fr}}
 
@@ -248,7 +249,7 @@ function newToken(){ var a=new Uint8Array(16); crypto.getRandomValues(a); return
 var TOKEN = lsGet("bento_token"); if(!TOKEN){ TOKEN=newToken(); lsSet("bento_token", TOKEN); }
 
 var S = {
-  loading:true, failed:false, session:null, late:false, orders:[], cart:{}, name:lsGet("bento_name"), dirty:false, round:null,
+  loading:true, failed:false, session:null, late:false, orders:[], cart:{}, name:lsGet("bento_name"), note:"", dirty:false, round:null,
   pw:lsGet("bento_admin_pw"), isAdmin:!!lsGet("bento_admin_pw"), showLogin:false, loginPw:"",
   adminShop:"chunfu", adminDeadline:"10:30", sumMode:"item", confirmNew:false, busy:false, lastPhase:null, lastJson:""
 };
@@ -326,6 +327,7 @@ function syncFromServer(){
   var mo=myOrder(); S.cart={};
   if(mo) mo.lines.forEach(function(l){ S.cart[l.key]=l.qty; });
   if(mo && mo.name) S.name=mo.name;
+  S.note = mo ? (mo.note||"") : "";
 }
 
 /* ---------- render ---------- */
@@ -443,13 +445,15 @@ function summaryText(){
     var ords=roundOrders().slice().sort(function(x,y){ return (x.updatedAt||0)-(y.updatedAt||0); });
     ords.forEach(function(o){
       var oc=linesCalc(o.lines, S.session.shop); c+=oc.cnt; a+=oc.amt;
-      t+=(o.name||"未填名字")+" $"+oc.amt+(o.paid?"（已付）":"")+"："+linesText(o.lines)+"\n";
+      t+=(o.name||"未填名字")+" $"+oc.amt+(o.paid?"（已付）":"")+"："+linesText(o.lines)+(o.note?"（備註："+o.note+"）":"")+"\n";
     });
     t+=ords.length+" 人，共 "+c+" 份，$"+a;
     return t;
   }
   agg.forEach(function(l){ t+=ITEMS[l.key].label+" ×"+l.qty+"\n"; c+=l.qty; a+=ITEMS[l.key].price*l.qty; });
   t+="共 "+c+" 份，$"+a;
+  var notes=roundOrders().filter(function(o){ return o.note; });
+  if(notes.length){ t+="\n備註："; notes.forEach(function(o){ t+="\n"+(o.name||"未填名字")+"："+linesText(o.lines)+" → "+o.note; }); }
   return t;
 }
 
@@ -473,6 +477,7 @@ function renderBoard(ph, sh){
     var c=linesCalc(o.lines, S.session.shop);
     h+='<li><span class="who">'+esc(o.name||"未填名字")+(o.mine?'（你）':'')+'</span><span class="amt num">$'+c.amt+'</span>';
     h+='<span class="what">'+esc(linesText(o.lines))+'</span>';
+    if(o.note) h+='<span class="note">備註：'+esc(o.note)+'</span>';
     if(S.isAdmin) h+='<label class="paid inline" style="justify-content:flex-end"><input type="checkbox" data-paid="'+esc(o.pid)+'"'+(o.paid?' checked':'')+'> 已付</label>';
     else h+='<span class="paid">'+(o.paid?'<span class="paidtag">已付</span>':'')+'</span>';
     h+='</li>';
@@ -490,6 +495,7 @@ function renderBar(ph, sh){
   var dis = S.busy || (!S.dirty && !!mo) || (!mo && !lines.length);
   var h='<div class="dock"><div class="dock-in">';
   h+='<div class="nm"><label for="nm" style="font-size:14px;white-space:nowrap">名字</label><input id="nm" type="text" maxlength="20" placeholder="隨便打，可以辨識就好" value="'+esc(S.name)+'" data-in="nm" autocomplete="name"></div>';
+  h+='<div class="nm"><label for="nt" style="font-size:14px;white-space:nowrap">備註</label><input id="nt" type="text" maxlength="50" placeholder="例如：不要豬肉、飯少（可不填）" value="'+esc(S.note)+'" data-in="nt"></div>';
   h+='<div class="sum num">'+c.cnt+' 份　<b>$'+c.amt+'</b></div>';
   h+='<div class="acts">'+(mo?'<button class="linkbtn" data-act="cancel"'+(S.busy?' disabled':'')+'>取消訂單</button>':'')+'<button class="btn primary" data-act="submit"'+(dis?' disabled':'')+'>'+label+'</button></div>';
   h+='</div></div>';
@@ -537,7 +543,7 @@ document.addEventListener("click", function(ev){
     lsSet("bento_name", nm);
     var mo=myOrder();
     if(!lines.length){ run({action:"cancel"}, "已取消你的訂單", function(){ S.dirty=false; }); return; }
-    run({action:"submit", name:nm, lines:lines}, mo ? "訂單已更新" : "訂單已送出", function(){ S.dirty=false; });
+    run({action:"submit", name:nm, note:S.note.trim(), lines:lines}, mo ? "訂單已更新" : "訂單已送出", function(){ S.dirty=false; });
     return;
   }
   if(act==="cancel"){ run({action:"cancel"}, "已取消你的訂單", function(){ S.cart={}; S.dirty=false; }); return; }
@@ -573,6 +579,7 @@ document.addEventListener("click", function(ev){
 document.addEventListener("input", function(ev){
   var k=ev.target.getAttribute && ev.target.getAttribute("data-in");
   if(k==="nm"){ S.name=ev.target.value; S.dirty=true; $("bar")._h=null; renderBar(phase(), shop()); }
+  if(k==="nt"){ S.note=ev.target.value; S.dirty=true; $("bar")._h=null; renderBar(phase(), shop()); }
   if(k==="dl"){ S.adminDeadline=ev.target.value; }
   if(k==="lp"){ S.loginPw=ev.target.value; }
 });
