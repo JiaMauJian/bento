@@ -70,6 +70,10 @@ input[type=time],input[type=text],input[type=password]{background:var(--paper);b
 .btn.primary{background:var(--seal);color:#fff}
 .btn.ghost{background:transparent;border:1px solid var(--rule);color:var(--ink);font-weight:500}
 .btn.danger{background:transparent;border:1px solid var(--seal);color:var(--seal)}
+.btn.ghost[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft);font-weight:700}
+.seg{display:flex;gap:6px;margin:18px 0 8px;align-items:center;flex-wrap:wrap}
+.seg h2{margin:0 auto 0 0}
+.seg .btn{padding:6px 12px;font-size:14px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .hint{font-size:14px;color:var(--muted);margin:8px 0 0}
 .empty{text-align:center;padding:48px 16px;color:var(--muted)}
@@ -165,7 +169,6 @@ var SHOPS = {
     note: "會議便當需提前三天預訂，請直接跟店家訂。",
     groups: [
       { title: "豬肉", items: [
-        { id: "c1", name: "燒肉", v: [["b","便當",90],["s","單點",50]] },
         { id: "c2", name: "薑汁燒肉", v: [["b","便當",95],["s","單點",60]] },
         { id: "c3", name: "家傳排骨", rec: 1, v: [["b","便當",100],["s","單點",60]] },
         { id: "c4", name: "日式豬排", v: [["b","便當",100],["s","單點",70]] },
@@ -247,7 +250,7 @@ var TOKEN = lsGet("bento_token"); if(!TOKEN){ TOKEN=newToken(); lsSet("bento_tok
 var S = {
   loading:true, failed:false, session:null, late:false, orders:[], cart:{}, name:lsGet("bento_name"), dirty:false, round:null,
   pw:lsGet("bento_admin_pw"), isAdmin:!!lsGet("bento_admin_pw"), showLogin:false, loginPw:"",
-  adminShop:"chunfu", adminDeadline:"10:30", confirmNew:false, busy:false, lastPhase:null, lastJson:""
+  adminShop:"chunfu", adminDeadline:"10:30", sumMode:"item", confirmNew:false, busy:false, lastPhase:null, lastJson:""
 };
 
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
@@ -436,6 +439,15 @@ function renderPay(ph, sh){
 function summaryText(){
   var sh=shop(), agg=aggregate(), c=0, a=0;
   var t=sh.name+" 訂單 "+prettyDate(S.session.date)+"\n";
+  if(S.sumMode==="person"){
+    var ords=roundOrders().slice().sort(function(x,y){ return (x.updatedAt||0)-(y.updatedAt||0); });
+    ords.forEach(function(o){
+      var oc=linesCalc(o.lines, S.session.shop); c+=oc.cnt; a+=oc.amt;
+      t+=(o.name||"未填名字")+" $"+oc.amt+(o.paid?"（已付）":"")+"："+linesText(o.lines)+"\n";
+    });
+    t+=ords.length+" 人，共 "+c+" 份，$"+a;
+    return t;
+  }
   agg.forEach(function(l){ t+=ITEMS[l.key].label+" ×"+l.qty+"\n"; c+=l.qty; a+=ITEMS[l.key].price*l.qty; });
   t+="共 "+c+" 份，$"+a;
   return t;
@@ -450,7 +462,10 @@ function renderBoard(ph, sh){
   agg.forEach(function(l){ var it=ITEMS[l.key]; cnt+=l.qty; amt+=it.price*l.qty; h+='<li><span>'+esc(it.label)+'</span><span class="num">×'+l.qty+'</span></li>'; });
   h+='</ul><div class="tot"><span>共 '+cnt+' 份</span><span class="num">$'+amt+'</span></div>';
   if(S.isAdmin && ph!=="open"){
-    h+='<h2 style="margin-top:18px">打電話用</h2><textarea id="sumtext" readonly>'+esc(summaryText())+'</textarea>';
+    h+='<div class="seg"><h2>'+(S.sumMode==="person"?"每個人點什麼":"打電話用")+'</h2>';
+    h+='<button class="btn ghost" data-act="summode" data-mode="item" aria-pressed="'+(S.sumMode!=="person")+'">依品項</button>';
+    h+='<button class="btn ghost" data-act="summode" data-mode="person" aria-pressed="'+(S.sumMode==="person")+'">依每個人</button></div>';
+    h+='<textarea id="sumtext" readonly>'+esc(summaryText())+'</textarea>';
     h+='<div class="row-ctl" style="margin-top:8px"><button class="btn ghost" data-act="copy">複製訂單文字</button></div>';
   }
   h+='</section><section class="panel"><h2>每個人</h2><ul class="people">';
@@ -545,6 +560,7 @@ document.addEventListener("click", function(ev){
     return;
   }
   if(act==="logout"){ S.isAdmin=false; S.pw=""; lsSet("bento_admin_pw",""); render(); return; }
+  if(act==="summode"){ S.sumMode=b.getAttribute("data-mode"); render(); return; }
   if(act==="copy"){
     var ta=$("sumtext"), txt=summaryText();
     var done=function(){ toast("已複製"); };
