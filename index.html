@@ -65,6 +65,10 @@ button{cursor:pointer}
 .shopbtn span{font-size:13px;color:var(--muted)}
 .shopbtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft)}
 .shopbtn:disabled{opacity:.45;cursor:not-allowed}
+.dates{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.datebtn{background:var(--paper);border:2px solid var(--rule);border-radius:10px;padding:8px 12px;font-size:15px}
+.datebtn small{display:block;font-size:12px;color:var(--muted)}
+.datebtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft)}
 label.inline{display:flex;align-items:center;gap:8px;font-size:15px}
 input[type=time],input[type=text],input[type=password]{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;min-width:0}
 .btn{border:none;border-radius:8px;padding:10px 16px;font-weight:700;background:var(--ink);color:var(--sheet)}
@@ -621,6 +625,15 @@ var SHOPS = {
 /* 有 days 的店家每天菜單不同：菜單範圍內沒列到的日子是店休，超過範圍（還沒更新）就用 groups 的常見品項 */
 function lastDay(sh){ return Object.keys(sh.days).sort().pop() || ""; }
 function groupsOf(sh, date){ return !sh.days ? sh.groups : sh.days[date] || (date > lastDay(sh) ? sh.groups : null); }
+/* 可以開單的日子：今天以後有菜單的日期；菜單還沒更新到今天就只能開今天（用常見品項） */
+function bookDays(sh){
+  var ds=Object.keys(sh.days).filter(function(d){ return d>=today(); }).sort();
+  return ds.length ? ds : (groupsOf(sh, today()) ? [today()] : []);
+}
+function adminDate(){
+  var sh=SHOPS[S.adminShop]; if(!sh.days) return today();
+  var ds=bookDays(sh); return ds.indexOf(S.adminDate)>=0 ? S.adminDate : ds[0];
+}
 function allGroups(sh){ return sh.days ? [].concat.apply(sh.groups, Object.keys(sh.days).map(function(d){ return sh.days[d]; })) : sh.groups; }
 
 /* key -> {label, price, shop, order, nocount} */
@@ -735,7 +748,7 @@ function renderHeader(ph, sh){
   var stamp = S.lastPhase && S.lastPhase!==ph && ph!=="idle" ? " stamp" : "";
   var h='<header class="hdr"><div>';
   if(ph==="idle"){
-    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">今天訂便當</h1><p class="meta">選好店家和截止時間就能開始收單。花梅蘭可以選日期預訂。</p>';
+    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">今天訂便當</h1><p class="meta">選好店家和截止時間就能開始收單。</p>';
   } else {
     h+='<div class="date">'+esc(prettyDate(S.session.date))+'　截止 '+esc(S.session.deadline)+'</div>';
     h+='<h1 class="shop">'+esc(sh.name)+'</h1>';
@@ -752,14 +765,21 @@ function renderAdmin(ph, sh){
   var h='<section class="panel owner" aria-label="主揪設定">';
   if(ph==="idle"){
     h+='<h2>今天訂哪一家？</h2><div class="shops">';
-    /* 每天菜單不同的店（花梅蘭）可以選日期預訂，所以店休那天也能點進去改日期 */
+    /* 每天菜單不同的店（花梅蘭）可以預訂，今天店休也能選之後的日子 */
     Object.keys(SHOPS).forEach(function(k){
-      var sh=SHOPS[k], off=!groupsOf(sh, sh.days ? S.adminDate : today());
-      h+='<button class="shopbtn" data-act="pick" data-shop="'+k+'" aria-pressed="'+(S.adminShop===k)+'"'+(off&&!sh.days?' disabled':'')+'><b>'+esc(sh.name)+'</b><span>'+esc(off?prettyDate(S.adminDate)+"沒有菜單（店休）":sh.rule.label)+'</span></button>';
+      var sh=SHOPS[k], off = sh.days ? !bookDays(sh).length : !groupsOf(sh, today());
+      h+='<button class="shopbtn" data-act="pick" data-shop="'+k+'" aria-pressed="'+(S.adminShop===k)+'"'+(off?' disabled':'')+'><b>'+esc(sh.name)+'</b><span>'+esc(off?"今天沒有菜單（店休）":sh.rule.label)+'</span></button>';
     });
-    h+='</div><div class="row-ctl">';
-    if(SHOPS[S.adminShop].days) h+='<label class="inline">日期 <input id="dt" type="date" min="'+today()+'" value="'+esc(S.adminDate)+'" data-in="dt"></label>';
-    h+='<label class="inline">截止時間 <input id="dl" type="time" value="'+esc(S.adminDeadline)+'" data-in="dl"></label>';
+    h+='</div>';
+    if(SHOPS[S.adminShop].days){
+      var sel=adminDate();
+      h+='<h2>訂哪一天？</h2><div class="dates">';
+      bookDays(SHOPS[S.adminShop]).forEach(function(d){
+        h+='<button class="datebtn" data-act="day" data-date="'+d+'" aria-pressed="'+(d===sel)+'">'+esc(prettyDate(d))+(d===today()?'<small>今天</small>':'')+'</button>';
+      });
+      h+='</div>';
+    }
+    h+='<div class="row-ctl"><label class="inline">截止時間 <input id="dl" type="time" value="'+esc(S.adminDeadline)+'" data-in="dl"></label>';
     h+='<button class="btn primary" data-act="open"'+dis+'>開始收單</button></div>';
     h+='<p class="hint">開單後把這頁的網址丟到群組，同事就能點餐。</p>';
   } else if(ph==="open" || ph==="late"){
@@ -929,9 +949,8 @@ document.addEventListener("click", function(ev){
   if(act==="cancel"){ if(!canOrder()) return; run(function(){ return myRef().remove(); }, "已取消你的訂單", function(){ S.cart={}; S.dirty=false; }); return; }
   if(act==="open"){
     if(!S.adminDeadline){ toast("請設定截止時間"); return; }
-    var date=SHOPS[S.adminShop].days ? S.adminDate : today();
-    if(!date || date<today()){ toast("請選今天以後的日期"); return; }
-    if(!groupsOf(SHOPS[S.adminShop], date)){ toast(SHOPS[S.adminShop].name+" "+prettyDate(date)+"沒有菜單"); return; }
+    var date=adminDate();
+    if(!date || !groupsOf(SHOPS[S.adminShop], date)){ toast(SHOPS[S.adminShop].name+" "+prettyDate(date)+"沒有菜單"); return; }
     run(function(){ return db.ref().update({ session:{ shop:S.adminShop, deadline:S.adminDeadline, date:date, status:"open", round:Date.now() }, orders:null }); },
       "已開始收單，把網址丟到群組吧"); return;
   }
@@ -941,6 +960,7 @@ document.addEventListener("click", function(ev){
   if(act==="newround"){
     run(function(){ return db.ref().update({ session:{ status:"idle", shop:S.session.shop }, orders:null }); }, "已清除，可以重新選店家"); return;
   }
+  if(act==="day"){ S.adminDate=b.getAttribute("data-date"); render(); return; }
   if(act==="summode"){ S.sumMode=b.getAttribute("data-mode"); render(); return; }
   if(act==="copy"){
     var ta=$("sumtext"), txt=summaryText();
@@ -959,7 +979,6 @@ document.addEventListener("input", function(ev){
 });
 
 document.addEventListener("change", function(ev){
-  if(ev.target.getAttribute && ev.target.getAttribute("data-in")==="dt"){ S.adminDate=ev.target.value; render(); return; }
   var pid=ev.target.getAttribute && ev.target.getAttribute("data-paid");
   if(!pid) return;
   var val=ev.target.checked;
