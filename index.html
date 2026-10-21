@@ -64,6 +64,7 @@ button{cursor:pointer}
 .shopbtn b{display:block;font-family:var(--serif);font-size:20px}
 .shopbtn span{font-size:13px;color:var(--muted)}
 .shopbtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft)}
+.shopbtn:disabled{opacity:.45;cursor:not-allowed}
 label.inline{display:flex;align-items:center;gap:8px;font-size:15px}
 input[type=time],input[type=text],input[type=password]{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;min-width:0}
 .btn{border:none;border-radius:8px;padding:10px 16px;font-weight:700;background:var(--ink);color:var(--sheet)}
@@ -141,7 +142,6 @@ textarea{width:100%;min-height:150px;background:var(--paper);border:1px solid va
 
 .paybig{font-size:18px;margin:0 0 10px}
 .paybig b{font-size:28px;color:var(--seal)}
-.foot{text-align:center;color:var(--muted);font-size:14px;margin:30px 0 10px}
 </style>
 </head>
 <body>
@@ -157,10 +157,12 @@ textarea{width:100%;min-height:150px;background:var(--paper);border:1px solid va
 <div id="bar"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-/* ===== 設定：部署 Apps Script 後，把網址貼在這裡 ===== */
-var API_URL = "https://script.google.com/macros/s/AKfycbxs_Yl3rCIQT2N-IdSriyyOXyPEXxkVaoDTKh-xsR6neQNh0_wUgorux4DF6ZmnXON7/exec";
-/* ==================================================== */
+/* ===== 設定：建立 Firebase 即時資料庫後，把網址貼在這裡 ===== */
+var DB_URL = "https://bento-4c2c1-default-rtdb.asia-southeast1.firebasedatabase.app";
+/* ========================================================== */
 
 
 var SHOPS = {
@@ -336,13 +338,278 @@ var SHOPS = {
         { id: "l24", name: "香檸冰茶", v: [["x","",60]] }
       ]}
     ]
+  },
+  hua: {
+    name: "花梅蘭", phone: "0925-093-053", addr: "",
+    rule: { type: "count", min: 3, label: "3 個便當以上才外送" }, deadline: "09:30",
+    note: "日式概念料理。每天菜單不同，加飯不加價，請於 9:30 前訂餐。飲料、單點不算外送份數，飲料甜度請寫在備註。",
+    /* 每月菜單從店家網站 monumental-sprinkles-8912d9.netlify.app 更新；沒列到的日期是店休 */
+    days: {
+      /* hua-days:start */
+      "2026-10-05": [
+        { title: "便當", items: [
+          { id: "h1005f1", name: "三鮮粥 (蝦仁、豬肉、花枝)", v: [["a","小",90],["b","大",100]] },
+          { id: "h1005f2", name: "塔塔醬炸豬排", v: [["x","",100]] },
+          { id: "h1005f3", name: "甘梅炸雞腿飯", v: [["x","",110]] },
+          { id: "h1005f4", name: "宮保嫩豬柳飯", v: [["x","",100]] },
+          { id: "h1005f5", name: "麻油雞丁飯+玉米蛋", v: [["x","",110]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1005d1", name: "松柏嶺冬片 (無糖限定)", v: [["x","",27]] }
+        ]}
+      ],
+      "2026-10-06": [
+        { title: "便當", items: [
+          { id: "h1006f1", name: "韓式辣醬豬五花飯", v: [["x","",100]] },
+          { id: "h1006f2", name: "紅燒軟骨飯", v: [["x","",100]] },
+          { id: "h1006f3", name: "低卡海鹽西芹手撕雞健康餐", v: [["x","",110]] },
+          { id: "h1006f4", name: "三杯雞腿丁 飯", v: [["x","",110]] },
+          { id: "h1006f5", name: "黒胡椒雞腿鐵板麵+荷包蛋", v: [["x","",120]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1006e1", name: "元氣三明治(燻雞)(附小冰紅)", v: [["x","",65]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1006d1", name: "蕎麥鮮奶茶(無糖、微糖)", v: [["x","",50]] }
+        ]}
+      ],
+      "2026-10-07": [
+        { title: "便當", items: [
+          { id: "h1007f1", name: "炒泡麵+烤腿排", v: [["a","小",80],["b","大",90]] },
+          { id: "h1007f2", name: "酥炸無骨雞排飯+山藥卷", v: [["x","",100]] },
+          { id: "h1007f3", name: "低卡黑胡椒雞胸丁健康餐", v: [["x","",110]] },
+          { id: "h1007f4", name: "鹹豬肉飯", v: [["x","",100]] },
+          { id: "h1007f5", name: "咖哩牛肉飯", v: [["x","",130]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1007e1", name: "炸大雞排(單點)", v: [["x","",80]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1007d1", name: "咖啡牛奶(甜度固定)", v: [["x","",45]] }
+        ]}
+      ],
+      "2026-10-08": [
+        { title: "便當", items: [
+          { id: "h1008f1", name: "楓糖三杯雞", v: [["x","",100]] },
+          { id: "h1008f2", name: "紐奧良烤腿排+麻油米血飯", v: [["x","",100]] },
+          { id: "h1008f3", name: "海南雞佐蒜蓉醬", v: [["x","",110]] },
+          { id: "h1008f4", name: "椒麻皮蛋豬肉飯", v: [["x","",100]] },
+          { id: "h1008f5", name: "黑胡椒烤肉飯+荷包蛋", v: [["x","",100]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1008e1", name: "綜合壽司", v: [["x","",115]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1008d1", name: "綠茶(無糖、微糖)", v: [["x","",27]] }
+        ]}
+      ],
+      "2026-10-12": [
+        { title: "便當", items: [
+          { id: "h1012f1", name: "椒麻拌麵+酥炸腿排", v: [["x","",100]] },
+          { id: "h1012f2", name: "低卡椒鹽雞胸丁健康餐", v: [["x","",110]] },
+          { id: "h1012f3", name: "韓式泡菜豬五花飯", v: [["x","",100]] },
+          { id: "h1012f4", name: "南瓜滷肉飯", v: [["x","",100]] },
+          { id: "h1012f5", name: "嫩烤腿排+雞柳條雙拼飯", v: [["x","",110]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1012d1", name: "梅之綠茶(無糖、微糖)", v: [["x","",36]] }
+        ]}
+      ],
+      "2026-10-13": [
+        { title: "便當", items: [
+          { id: "h1013f1", name: "香菇玉米滑蛋粥+酥腿排", v: [["x","",100]] },
+          { id: "h1013f2", name: "糖醋彩椒咕咾肉飯", v: [["x","",100]] },
+          { id: "h1013f3", name: "味噌炒豬柳+蒸蛋", v: [["x","",100]] },
+          { id: "h1013f4", name: "煙燻烤骨腿飯", v: [["x","",100]] },
+          { id: "h1013f5", name: "三寶飯（控肉、柳葉魚、蝦仁)", v: [["x","",120]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1013e1", name: "綜合壽司", v: [["x","",115]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1013d1", name: "綠茶(無糖、微糖)", v: [["x","",27]] }
+        ]}
+      ],
+      "2026-10-14": [
+        { title: "便當", items: [
+          { id: "h1014f1", name: "炒泡麵+烤腿排", v: [["a","小",80],["b","大",90]] },
+          { id: "h1014f2", name: "沙茶豬肉燴飯", v: [["x","",100]] },
+          { id: "h1014f3", name: "雞肉拌飯+蝦仁蛋", v: [["x","",120]] },
+          { id: "h1014f4", name: "低卡彩椒嫩雞胸丁健康餐", v: [["x","",110]] },
+          { id: "h1014f5", name: "蒲燒鯛魚+鹽酥雞雙拼飯", v: [["x","",110]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1014e1", name: "炸大雞排(單點)", v: [["x","",80]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1014d1", name: "摩斯紅茶(無糖、微糖)", v: [["x","",27]] }
+        ]}
+      ],
+      "2026-10-15": [
+        { title: "便當", items: [
+          { id: "h1015f1", name: "泡菜乾拌媽媽麵", v: [["a","小",80],["b","大",90]] },
+          { id: "h1015f2", name: "韓式味噌辣醬豬肉飯", v: [["x","",110]] },
+          { id: "h1015f3", name: "金莎嫩烤雞腿飯+蒸蛋", v: [["x","",115]] },
+          { id: "h1015f4", name: "海鹽豬柳+鯖魚健康餐", v: [["x","",120]] },
+          { id: "h1015f5", name: "彩椒甜豆炒雞丁飯", v: [["x","",100]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1015d1", name: "杏仁凍蕎麥茶(無糖、微糖)", v: [["x","",45]] }
+        ]}
+      ],
+      "2026-10-16": [
+        { title: "便當", items: [
+          { id: "h1016f1", name: "章魚燒醬豬排飯", v: [["x","",100]] },
+          { id: "h1016f2", name: "杏鮑菇白醬嫩腿丁飯", v: [["x","",110]] },
+          { id: "h1016f3", name: "控肉飯+滷蛋", v: [["x","",110]] },
+          { id: "h1016f4", name: "泰式椒麻無骨雞腿飯", v: [["x","",120]] },
+          { id: "h1016f5", name: "油蔥雞肉飯+油豆腐", v: [["x","",100]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1016e1", name: "綜合水餃10顆", v: [["x","",55]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1016d1", name: "綠茶拿鐵(無糖、微糖)", v: [["x","",50]] }
+        ]}
+      ],
+      "2026-10-19": [
+        { title: "便當", items: [
+          { id: "h1019f1", name: "黒胡椒烤無骨雞腿飯", v: [["x","",110]] },
+          { id: "h1019f2", name: "泰式打拋豬飯+炸銀絲捲", v: [["x","",100]] },
+          { id: "h1019f3", name: "低卡玫瑰鹽雞胸丁健康餐", v: [["x","",110]] },
+          { id: "h1019f4", name: "烤鯖魚+香腸飯", v: [["x","",100]] },
+          { id: "h1019f5", name: "栗子燒雞腿丁飯", v: [["x","",110]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1019d1", name: "甘蔗青(無糖、微糖)", v: [["x","",54]] }
+        ]}
+      ],
+      "2026-10-20": [
+        { title: "便當", items: [
+          { id: "h1020f1", name: "塔塔醬炸魚排雙拼豬柳飯", v: [["x","",110]] },
+          { id: "h1020f2", name: "蒜香番茄杏鮑菇燉雞飯", v: [["x","",100]] },
+          { id: "h1020f3", name: "蒙古烤肉燴麵+荷包蛋", v: [["x","",100]] },
+          { id: "h1020f4", name: "豆乳烤無骨雞腿飯", v: [["x","",110]] },
+          { id: "h1020f5", name: "蕃茄醬炸豬排飯+薯泥沙拉", v: [["x","",110]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1020e1", name: "元氣三明治(燻雞)(附小冰紅)", v: [["x","",65]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1020d1", name: "小珍珠奶茶(無糖、微糖)", v: [["x","",50]] }
+        ]}
+      ],
+      "2026-10-21": [
+        { title: "便當", items: [
+          { id: "h1021f1", name: "炒泡麵+烤腿排", v: [["a","小",80],["b","大",90]] },
+          { id: "h1021f2", name: "糖醋排骨飯+山藥卷", v: [["x","",100]] },
+          { id: "h1021f3", name: "沙茶烤肉片飯", v: [["x","",100]] },
+          { id: "h1021f4", name: "西芹炒雙鮮飯(魷魚、蝦仁)", v: [["x","",115]] },
+          { id: "h1021f5", name: "親子丼飯", v: [["x","",100]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1021e1", name: "炸大雞排(單點)", v: [["x","",80]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1021d1", name: "紅烏龍(無糖、微糖)", v: [["x","",27]] }
+        ]}
+      ],
+      "2026-10-22": [
+        { title: "便當", items: [
+          { id: "h1022f1", name: "椒麻皮蛋肉醬吻仔魚乾拌麵", v: [["x","",100]] },
+          { id: "h1022f2", name: "酥炸羅勒腿排飯+菜圃蛋", v: [["x","",100]] },
+          { id: "h1022f3", name: "紅糟肉+雞米花雙拼飯", v: [["x","",110]] },
+          { id: "h1022f4", name: "低卡椒鹽碎腿肉健康餐", v: [["x","",110]] },
+          { id: "h1022f5", name: "炸豬排蛋包飯+炸薯條", v: [["x","",120]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1022d1", name: "摩斯紅茶(無糖、微糖)", v: [["x","",27]] }
+        ]}
+      ],
+      "2026-10-23": [
+        { title: "便當", items: [
+          { id: "h1023f1", name: "什錦炒麵+炸肉排", v: [["a","小",90],["b","大",100]] },
+          { id: "h1023f2", name: "紅燒滷肉飯", v: [["x","",100]] },
+          { id: "h1023f3", name: "泰式酸辣酥炸雞腿丁飯", v: [["x","",110]] },
+          { id: "h1023f4", name: "水蓮海鹽雞胸丁健康餐", v: [["x","",110]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1023e1", name: "炸大雞排(單點)", v: [["x","",80]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1023d1", name: "多多綠(無糖、微糖)", v: [["x","",45]] }
+        ]}
+      ],
+      "2026-10-27": [
+        { title: "便當", items: [
+          { id: "h1027f1", name: "麻辣鍋（附媽媽拉麵)", v: [["x","",100]] },
+          { id: "h1027f2", name: "油蔥雞肉碎腿肉飯", v: [["x","",100]] },
+          { id: "h1027f3", name: "梅子醬燒豬飯", v: [["x","",100]] },
+          { id: "h1027f4", name: "魷米花+檸檬雞腿雙拼飯", v: [["x","",110]] },
+          { id: "h1027f5", name: "唐揚雞咖哩飯", v: [["x","",120]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1027d1", name: "青茶(無糖、微糖)", v: [["x","",27]] }
+        ]}
+      ],
+      "2026-10-28": [
+        { title: "便當", items: [
+          { id: "h1028f1", name: "紅燒腿庫飯", v: [["x","",100]] },
+          { id: "h1028f2", name: "脆皮紅糟肉飯", v: [["x","",100]] },
+          { id: "h1028f3", name: "韓式蜂蜜辣醬炸雞飯", v: [["x","",100]] },
+          { id: "h1028f4", name: "口水雞飯+炒蛋", v: [["x","",110]] },
+          { id: "h1028f5", name: "玫瑰鹽雞胸丁健康餐", v: [["x","",110]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1028e1", name: "炸大雞排(單點)", v: [["x","",80]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1028d1", name: "紅茶拿鐵(無糖、微糖)", v: [["x","",50]] }
+        ]}
+      ],
+      "2026-10-29": [
+        { title: "便當", items: [
+          { id: "h1029f1", name: "客家炒粄條+炸腿排", v: [["x","",100]] },
+          { id: "h1029f2", name: "香滷雞腿飯", v: [["x","",105]] },
+          { id: "h1029f3", name: "塔塔醬炸魚排雙拼炒肉飯", v: [["x","",110]] },
+          { id: "h1029f4", name: "泡菜炒雞腿丁飯", v: [["x","",110]] },
+          { id: "h1029f5", name: "墨西哥辣椒炒肉", v: [["x","",100]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1029e1", name: "綜合壽司", v: [["x","",115]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1029d1", name: "金桔梅子紅(甜度固定)", v: [["x","",45]] }
+        ]}
+      ],
+      "2026-10-30": [
+        { title: "便當", items: [
+          { id: "h1030f1", name: "橙汁排骨飯+玉米蛋", v: [["x","",100]] },
+          { id: "h1030f2", name: "酸菜白肉鍋 (附冬粉)", v: [["x","",100]] },
+          { id: "h1030f3", name: "辣炒豬肉飯", v: [["x","",100]] },
+          { id: "h1030f4", name: "椒鹽嫩雞胸丁健康餐", v: [["x","",110]] },
+          { id: "h1030f5", name: "泰式椒麻無骨雞腿飯", v: [["x","",120]] }
+        ]},
+        { title: "單點", nocount: 1, items: [
+          { id: "h1030e1", name: "綜合水餃10顆", v: [["x","",55]] }
+        ]},
+        { title: "飲料", nocount: 1, items: [
+          { id: "h1030d1", name: "柳橙綠(無糖、微糖)", v: [["x","",59]] }
+        ]}
+      ]
+      /* hua-days:end */
+    }
   }
 };
 
-/* key -> {label, price, shop, order} */
-var ITEMS = {}; (function(){ var n=0; Object.keys(SHOPS).forEach(function(sk){ SHOPS[sk].groups.forEach(function(g){ g.items.forEach(function(it){ it.v.forEach(function(v){
+/* 有 days 的店家每天菜單不同，沒有那天就是店休 */
+function groupsOf(sh, date){ return sh.days ? sh.days[date] || null : sh.groups; }
+function allGroups(sh){ return sh.days ? [].concat.apply([], Object.keys(sh.days).map(function(d){ return sh.days[d]; })) : sh.groups; }
+
+/* key -> {label, price, shop, order, nocount} */
+var ITEMS = {}; (function(){ var n=0; Object.keys(SHOPS).forEach(function(sk){ allGroups(SHOPS[sk]).forEach(function(g){ g.items.forEach(function(it){ it.v.forEach(function(v){
   var key = it.id + "." + v[0];
-  ITEMS[key] = { label: it.name + (v[1] ? "（" + v[1] + "）" : ""), price: v[2], shop: sk, order: n++ };
+  ITEMS[key] = { label: it.name + (v[1] ? "（" + v[1] + "）" : ""), price: v[2], shop: sk, order: n++, nocount: !!g.nocount };
 }); }); }); }); })();
 
 function lsGet(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
@@ -353,8 +620,7 @@ var TOKEN = lsGet("bento_token"); if(!TOKEN){ TOKEN=newToken(); lsSet("bento_tok
 
 var S = {
   loading:true, failed:false, session:null, late:false, orders:[], cart:{}, name:lsGet("bento_name"), note:"", dirty:false, round:null,
-  pw:lsGet("bento_admin_pw"), isAdmin:!!lsGet("bento_admin_pw"), showLogin:false, loginPw:"",
-  adminShop:"chunfu", adminDeadline:"10:30", sumMode:"item", confirmNew:false, busy:false, lastPhase:null, lastJson:""
+  adminShop:"chunfu", adminDeadline:"10:30", sumMode:"item", confirmNew:false, busy:false, lastPhase:null
 };
 
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
@@ -370,38 +636,35 @@ function patch(el, html){
   if(id){ var n=document.getElementById(id); if(n){ n.focus({preventScroll:true}); try{ if(ss!=null) n.setSelectionRange(ss,se); }catch(e){} } }
 }
 
-/* ---------- API ---------- */
-function api(params, timeoutMs){
-  params.token = TOKEN;
-  var ctl = timeoutMs && window.AbortController ? new AbortController() : null;
-  var timer = ctl ? setTimeout(function(){ ctl.abort(); }, timeoutMs) : 0;
-  return fetch(API_URL, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body:JSON.stringify(params), signal: ctl ? ctl.signal : undefined })
-    .then(function(r){ clearTimeout(timer); return r.json(); }, function(e){ clearTimeout(timer); throw e; });
-}
-/* Google 的網頁應用程式偶爾會卡十幾秒，逾時就重送，通常重送一次就很快 */
-function apiRetry(params, tries){
-  return api(params, 8000).catch(function(e){
-    if(tries>1) return apiRetry(params, tries-1);
-    throw e;
+/* ---------- 資料庫 ----------
+   /session          {shop, deadline, date, status: idle|open|closed, round}
+   /orders/{token}   {name, note, lines:[{key,qty}], paid, updatedAt}
+   orders 只放這一輪的單，開單和開新一輪時整個清掉。 */
+var configured = /^https:\/\/.+(firebaseio\.com|firebasedatabase\.app)/.test(DB_URL);
+var db = configured ? firebase.initializeApp({ databaseURL: DB_URL }).database() : null;
+
+function pad(n){ return ("0"+n).slice(-2); }
+function today(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function nowStr(){ var d=new Date(); return today()+" "+pad(d.getHours())+":"+pad(d.getMinutes()); }
+function isLate(s){ return !!(s && s.date && s.deadline) && nowStr() > s.date+" "+s.deadline; }
+
+var KEEP_DAYS = 3;
+function isExpired(s){ return !!(s && s.date) && (new Date(today()+"T00:00:00") - new Date(s.date+"T00:00:00")) >= KEEP_DAYS*864e5; }
+
+function onData(v){
+  v = v || {};
+  // 開單超過 3 天就清掉訂單，回到選店家；清完資料庫會再觸發一次 onData
+  if(isExpired(v.session)){ db.ref().update({ session:{ status:"idle", shop:v.session.shop||"chunfu" }, orders:null }); return; }
+  S.session = v.session || null;
+  S.orders = Object.keys(v.orders || {}).map(function(k){
+    var o=v.orders[k]; return { pid:k, name:o.name||"", lines:o.lines||[], paid:!!o.paid, updatedAt:o.updatedAt||0, note:o.note||"", mine:k===TOKEN };
   });
-}
-var refreshing=false;
-function refresh(){
-  if(refreshing) return Promise.resolve();
-  refreshing=true;
-  return apiRetry({ action:"state" }, S.loading ? 4 : 1).then(function(res){
-    refreshing=false;
-    if(!res || !res.ok) throw new Error(res && res.error || "讀取失敗");
-    var json=JSON.stringify([res.session,res.late,res.orders]);
-    S.failed=false;
-    if(json===S.lastJson && !S.loading) return;
-    S.lastJson=json; S.session=res.session; S.late=!!res.late; S.orders=res.orders||[];
-    if(S.loading){
-      if(S.session && S.session.deadline) S.adminDeadline=S.session.deadline;
-      if(S.session && SHOPS[S.session.shop]) S.adminShop=S.session.shop;
-    }
-    S.loading=false; syncFromServer(); render();
-  }).catch(function(){ refreshing=false; if(S.loading){ S.failed=true; S.loading=false; render(); } });
+  S.late = isLate(S.session);
+  if(S.loading){
+    if(S.session && S.session.deadline) S.adminDeadline=S.session.deadline;
+    if(S.session && SHOPS[S.session.shop]) S.adminShop=S.session.shop;
+  }
+  S.loading=false; S.failed=false; syncFromServer(); render();
 }
 
 /* ---------- derived ---------- */
@@ -415,7 +678,7 @@ function phase(){
 function roundOrders(){ return S.orders.filter(function(o){ return o.lines && o.lines.length; }); }
 function myOrder(){ for(var i=0;i<S.orders.length;i++){ if(S.orders[i].mine) return S.orders[i]; } return null; }
 function linesCalc(lines, sk){
-  var amt=0, cnt=0; (lines||[]).forEach(function(l){ var it=ITEMS[l.key]; if(it && it.shop===sk && l.qty>0){ amt+=it.price*l.qty; cnt+=l.qty; } }); return {amt:amt, cnt:cnt};
+  var amt=0, cnt=0, rc=0; (lines||[]).forEach(function(l){ var it=ITEMS[l.key]; if(it && it.shop===sk && l.qty>0){ amt+=it.price*l.qty; cnt+=l.qty; if(!it.nocount) rc+=l.qty; } }); return {amt:amt, cnt:cnt, rc:rc};
 }
 function cartLines(){ var sk=S.session&&S.session.shop; return Object.keys(S.cart).filter(function(k){ return S.cart[k]>0 && ITEMS[k] && ITEMS[k].shop===sk; }).sort(function(a,b){ return ITEMS[a].order-ITEMS[b].order; }).map(function(k){ return {key:k, qty:S.cart[k]}; }); }
 function linesText(lines){ return lines.filter(function(l){ return ITEMS[l.key]; }).map(function(l){ return ITEMS[l.key].label+"×"+l.qty; }).join("、"); }
@@ -435,18 +698,18 @@ function syncFromServer(){
 
 /* ---------- render ---------- */
 function render(){
-  var all=["hdr","admin","status","menu","pay","board","bar"];
-  if(!API_URL || API_URL.indexOf("script.google.com")<0){
-    patch($("hdr"), '<div class="empty"><b>還沒設定後端網址</b>請把 index.html 開頭的 API_URL 換成你的 Apps Script 網址。</div>');
+  var all=["hdr","admin","status","menu","pay","board","bar","foot"];
+  if(!configured){
+    patch($("hdr"), '<div class="empty"><b>還沒設定資料庫網址</b>請把 index.html 開頭的 DB_URL 換成你的 Firebase 即時資料庫網址。</div>');
     all.slice(1).forEach(function(id){ patch($(id), ""); }); return;
   }
   if(S.loading){ patch($("hdr"), '<div class="empty">載入中…</div>'); return; }
   if(S.failed){
-    patch($("hdr"), '<div class="empty"><b>連不到點餐資料</b>請稍後重新整理，或請主揪確認後端設定。</div>');
+    patch($("hdr"), '<div class="empty"><b>連不到點餐資料</b>請稍後重新整理，或確認 Firebase 的規則有開放讀寫。</div>');
     all.slice(1).forEach(function(id){ patch($(id), ""); }); return;
   }
   var ph=phase(), sh=shop();
-  renderHeader(ph, sh); renderAdmin(ph, sh); renderStatus(ph, sh); renderMenu(ph, sh); renderPay(ph, sh); renderBoard(ph, sh); renderBar(ph, sh); renderFoot();
+  renderHeader(ph, sh); renderAdmin(ph, sh); renderStatus(ph, sh); renderMenu(ph, sh); renderPay(ph, sh); renderBoard(ph, sh); renderBar(ph, sh);
   S.lastPhase=ph;
 }
 
@@ -455,7 +718,7 @@ function renderHeader(ph, sh){
   var stamp = S.lastPhase && S.lastPhase!==ph && ph!=="idle" ? " stamp" : "";
   var h='<header class="hdr"><div>';
   if(ph==="idle"){
-    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">今天訂便當</h1><p class="meta">等主揪選好店家就能開始點。</p>';
+    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">今天訂便當</h1><p class="meta">選好店家和截止時間就能開始收單。</p>';
   } else {
     h+='<div class="date">'+esc(prettyDate(S.session.date))+'　截止 '+esc(S.session.deadline)+'</div>';
     h+='<h1 class="shop">'+esc(sh.name)+'</h1>';
@@ -466,39 +729,41 @@ function renderHeader(ph, sh){
   patch($("hdr"), h);
 }
 
+/* 沒開單時，選店家放最上面；開單後主揪按鈕移到頁尾，不擋點餐 */
 function renderAdmin(ph, sh){
-  if(!S.isAdmin){ patch($("admin"), ""); return; }
   var dis=S.busy?' disabled':'';
   var h='<section class="panel owner" aria-label="主揪設定">';
   if(ph==="idle"){
     h+='<h2>今天訂哪一家？</h2><div class="shops">';
     Object.keys(SHOPS).forEach(function(k){
-      h+='<button class="shopbtn" data-act="pick" data-shop="'+k+'" aria-pressed="'+(S.adminShop===k)+'"><b>'+esc(SHOPS[k].name)+'</b><span>'+esc(SHOPS[k].rule.label)+'</span></button>';
+      var off=!groupsOf(SHOPS[k], today());
+      h+='<button class="shopbtn" data-act="pick" data-shop="'+k+'" aria-pressed="'+(S.adminShop===k)+'"'+(off?' disabled':'')+'><b>'+esc(SHOPS[k].name)+'</b><span>'+esc(off?"今天沒有菜單（店休）":SHOPS[k].rule.label)+'</span></button>';
     });
     h+='</div><div class="row-ctl"><label class="inline">截止時間 <input id="dl" type="time" value="'+esc(S.adminDeadline)+'" data-in="dl"></label>';
     h+='<button class="btn primary" data-act="open"'+dis+'>開始收單</button></div>';
     h+='<p class="hint">開單後把這頁的網址丟到群組，同事就能點餐。</p>';
   } else if(ph==="open" || ph==="late"){
-    h+='<h2>'+(ph==="late"?"已過截止時間，大家暫時不能點":"收單中")+'</h2><div class="row-ctl">';
+    h+='<h2>主揪：'+(ph==="late"?"已過截止時間，大家暫時不能點":"收單中")+'</h2><div class="row-ctl">';
     h+='<label class="inline">截止時間 <input id="dl" type="time" value="'+esc(S.adminDeadline)+'" data-in="dl"></label>';
     h+='<button class="btn ghost" data-act="setdl"'+dis+'>更新截止時間</button>';
     h+='<button class="btn primary" data-act="close"'+dis+'>結單</button></div>';
   } else {
-    h+='<h2>已結單</h2><div class="row-ctl">';
+    h+='<h2>主揪：已結單</h2><div class="row-ctl">';
     h+='<button class="btn ghost" data-act="reopen"'+dis+'>重新開放點餐</button>';
     h+='<button class="btn danger" data-act="newround"'+dis+'>'+(S.confirmNew?"確定清除所有訂單？":"開新一輪")+'</button></div>';
     h+='<p class="hint">開新一輪會清除這次所有人的訂單，回到選店家。</p>';
   }
   h+='</section>';
-  patch($("admin"), h);
+  patch($("admin"), ph==="idle" ? h : "");
+  patch($("foot"), ph==="idle" ? "" : h);
 }
 
 function renderStatus(ph, sh){
-  if(ph==="idle"){ patch($("status"), S.isAdmin ? "" : '<div class="empty"><b>今天還沒開放點餐</b>主揪開單後這頁會自動更新。</div>'); return; }
-  var ords=roundOrders(), amt=0, cnt=0;
-  ords.forEach(function(o){ var c=linesCalc(o.lines, S.session.shop); amt+=c.amt; cnt+=c.cnt; });
-  var r=sh.rule, val = r.type==="amount" ? amt : cnt, ok = val>=r.min, pct=Math.min(100, Math.round(val/r.min*100));
-  var msg = ok ? "已達外送門檻" : (r.type==="amount" ? "還差 "+(r.min-amt)+" 元" : "還差 "+(r.min-cnt)+" 份");
+  if(ph==="idle"){ patch($("status"), ""); return; }
+  var ords=roundOrders(), amt=0, cnt=0, rc=0;
+  ords.forEach(function(o){ var c=linesCalc(o.lines, S.session.shop); amt+=c.amt; cnt+=c.cnt; rc+=c.rc; });
+  var r=sh.rule, val = r.type==="amount" ? amt : rc, ok = val>=r.min, pct=Math.min(100, Math.round(val/r.min*100));
+  var msg = ok ? "已達外送門檻" : (r.type==="amount" ? "還差 "+(r.min-amt)+" 元" : "還差 "+(r.min-rc)+" 份");
   var h='<section class="panel"><div class="th-top"><span class="th-msg '+(ok?"ok":"no")+'">'+msg+'</span>';
   h+='<span class="num">'+ords.length+' 人點餐，共 '+cnt+' 份，$'+amt+'</span></div>';
   h+='<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="'+r.min+'" aria-valuenow="'+val+'"><i class="'+(ok?"ok":"")+'" style="width:'+pct+'%"></i></div>';
@@ -509,7 +774,7 @@ function renderStatus(ph, sh){
 function renderMenu(ph, sh){
   if(ph!=="open"){ patch($("menu"), ""); return; }
   var h='';
-  sh.groups.forEach(function(g){
+  (groupsOf(sh, S.session.date) || []).forEach(function(g){
     h+='<section class="sec"><h2>'+esc(g.title)+(g.sub?' <small>'+esc(g.sub)+'</small>':'')+'</h2>';
     g.items.forEach(function(it){
       var any=false, vh='';
@@ -568,7 +833,7 @@ function renderBoard(ph, sh){
   h+='<section class="panel"><h2>品項統計</h2><ul class="agg">';
   agg.forEach(function(l){ var it=ITEMS[l.key]; cnt+=l.qty; amt+=it.price*l.qty; h+='<li><span>'+esc(it.label)+'</span><span class="num">×'+l.qty+'</span></li>'; });
   h+='</ul><div class="tot"><span>共 '+cnt+' 份</span><span class="num">$'+amt+'</span></div>';
-  if(S.isAdmin && ph!=="open"){
+  if(ph!=="open"){
     h+='<div class="seg"><h2>'+(S.sumMode==="person"?"每個人點什麼":"打電話用")+'</h2>';
     h+='<button class="btn ghost" data-act="summode" data-mode="item" aria-pressed="'+(S.sumMode!=="person")+'">依品項</button>';
     h+='<button class="btn ghost" data-act="summode" data-mode="person" aria-pressed="'+(S.sumMode==="person")+'">依每個人</button></div>';
@@ -581,8 +846,7 @@ function renderBoard(ph, sh){
     h+='<li><span class="who">'+esc(o.name||"未填名字")+(o.mine?'（你）':'')+'</span><span class="amt num">$'+c.amt+'</span>';
     h+='<span class="what">'+esc(linesText(o.lines))+'</span>';
     if(o.note) h+='<span class="note">備註：'+esc(o.note)+'</span>';
-    if(S.isAdmin) h+='<label class="paid inline" style="justify-content:flex-end"><input type="checkbox" data-paid="'+esc(o.pid)+'"'+(o.paid?' checked':'')+'> 已付</label>';
-    else h+='<span class="paid">'+(o.paid?'<span class="paidtag">已付</span>':'')+'</span>';
+    h+='<label class="paid inline" style="justify-content:flex-end"><input type="checkbox" data-paid="'+esc(o.pid)+'"'+(o.paid?' checked':'')+'> 已付</label>';
     h+='</li>';
   });
   h+='</ul></section>';
@@ -605,30 +869,22 @@ function renderBar(ph, sh){
   patch($("bar"), h);
 }
 
-function renderFoot(){
-  var h='<footer class="foot">';
-  if(S.isAdmin) h+='主揪模式　<button class="linkbtn" data-act="logout">登出</button>';
-  else if(S.showLogin) h+='<div class="row-ctl" style="justify-content:center"><input id="lp" type="password" placeholder="主揪密碼" data-in="lp" autocomplete="current-password"><button class="btn ghost" data-act="login"'+(S.busy?' disabled':'')+'>登入</button></div>';
-  else h+='<button class="linkbtn" data-act="showlogin">主揪登入</button>';
-  h+='</footer>';
-  patch($("foot"), h);
-}
-
 /* ---------- actions ---------- */
-function run(params, okMsg, after){
+function run(write, okMsg, after){
   if(S.busy) return; S.busy=true; render();
-  return api(params).then(function(res){
-    if(!res || !res.ok){ toast(res && res.error || "操作失敗"); return; }
-    if(after) after(res);
+  return write().then(function(){
+    if(after) after();
     if(okMsg) toast(okMsg);
-    return refresh();
   }).catch(function(){ toast("連線失敗，請稍後再試"); })
   .then(function(){ S.busy=false; render(); });
 }
-function adminRun(action, extra, okMsg){
-  var p={ action:action, pw:S.pw }; if(extra) Object.keys(extra).forEach(function(k){ p[k]=extra[k]; });
-  return run(p, okMsg);
+function canOrder(){
+  S.late=isLate(S.session);
+  if(phase()==="open") return true;
+  toast("已經截止，不能再改了"); render(); return false;
 }
+var myRef=function(){ return db.ref("orders/"+TOKEN); };
+var sessionRef=function(){ return db.ref("session"); };
 
 document.addEventListener("click", function(ev){
   var b=ev.target.closest("[data-act]"); if(!b || b.disabled) return;
@@ -639,36 +895,33 @@ document.addEventListener("click", function(ev){
     if(q<=0) delete S.cart[k]; else S.cart[k]=Math.min(q,99);
     S.dirty=true; render(); return;
   }
-  if(act==="pick"){ S.adminShop=b.getAttribute("data-shop"); render(); return; }
+  if(act==="pick"){ S.adminShop=b.getAttribute("data-shop"); if(SHOPS[S.adminShop].deadline) S.adminDeadline=SHOPS[S.adminShop].deadline; render(); return; }
   if(act==="submit"){
-    var lines=cartLines(), nm=S.name.trim();
+    var lines=cartLines(), nm=S.name.trim().slice(0,20);
     if(!nm){ toast("請先填名字"); var n=$("nm"); if(n) n.focus(); return; }
+    if(!canOrder()) return;
     lsSet("bento_name", nm);
     var mo=myOrder();
-    if(!lines.length){ run({action:"cancel"}, "已取消你的訂單", function(){ S.dirty=false; }); return; }
-    run({action:"submit", name:nm, note:S.note.trim(), lines:lines}, mo ? "訂單已更新" : "訂單已送出", function(){ S.dirty=false; });
+    if(!lines.length){ run(function(){ return myRef().remove(); }, "已取消你的訂單", function(){ S.dirty=false; }); return; }
+    run(function(){ return myRef().update({ name:nm, note:S.note.trim().slice(0,50), lines:lines, updatedAt:firebase.database.ServerValue.TIMESTAMP }); },
+      mo ? "訂單已更新" : "訂單已送出", function(){ S.dirty=false; });
     return;
   }
-  if(act==="cancel"){ run({action:"cancel"}, "已取消你的訂單", function(){ S.cart={}; S.dirty=false; }); return; }
-  if(act==="open"){ if(!S.adminDeadline){ toast("請設定截止時間"); return; } adminRun("admin_open", {shop:S.adminShop, deadline:S.adminDeadline}, "已開始收單，把網址丟到群組吧"); return; }
-  if(act==="setdl"){ if(!S.adminDeadline){ toast("請設定截止時間"); return; } adminRun("admin_setdl", {deadline:S.adminDeadline}, "截止時間已更新"); return; }
-  if(act==="close"){ adminRun("admin_close", null, "已結單"); return; }
-  if(act==="reopen"){ if(S.late) toast("截止時間已過，記得更新截止時間"); adminRun("admin_reopen", null, null); return; }
+  if(act==="cancel"){ if(!canOrder()) return; run(function(){ return myRef().remove(); }, "已取消你的訂單", function(){ S.cart={}; S.dirty=false; }); return; }
+  if(act==="open"){
+    if(!S.adminDeadline){ toast("請設定截止時間"); return; }
+    if(!groupsOf(SHOPS[S.adminShop], today())){ toast(SHOPS[S.adminShop].name+"今天沒有菜單"); return; }
+    run(function(){ return db.ref().update({ session:{ shop:S.adminShop, deadline:S.adminDeadline, date:today(), status:"open", round:Date.now() }, orders:null }); },
+      "已開始收單，把網址丟到群組吧"); return;
+  }
+  if(act==="setdl"){ if(!S.adminDeadline){ toast("請設定截止時間"); return; } run(function(){ return sessionRef().update({ deadline:S.adminDeadline, status:"open" }); }, "截止時間已更新"); return; }
+  if(act==="close"){ run(function(){ return sessionRef().update({ status:"closed" }); }, "已結單"); return; }
+  if(act==="reopen"){ if(S.late) toast("截止時間已過，記得更新截止時間"); run(function(){ return sessionRef().update({ status:"open" }); }); return; }
   if(act==="newround"){
     if(!S.confirmNew){ S.confirmNew=true; render(); return; }
-    S.confirmNew=false; adminRun("admin_newround", null, "已清除，可以重新選店家"); return;
+    S.confirmNew=false;
+    run(function(){ return db.ref().update({ session:{ status:"idle", shop:S.session.shop }, orders:null }); }, "已清除，可以重新選店家"); return;
   }
-  if(act==="showlogin"){ S.showLogin=true; render(); var lp=$("lp"); if(lp) lp.focus(); return; }
-  if(act==="login"){
-    var pw=S.loginPw; if(!pw){ toast("請輸入主揪密碼"); return; }
-    S.busy=true; render();
-    api({action:"checkAdmin", pw:pw}).then(function(res){
-      if(res && res.ok){ S.pw=pw; S.isAdmin=true; S.showLogin=false; S.loginPw=""; lsSet("bento_admin_pw", pw); toast("已切換成主揪模式"); }
-      else toast("密碼錯誤");
-    }).catch(function(){ toast("連線失敗，請稍後再試"); }).then(function(){ S.busy=false; render(); });
-    return;
-  }
-  if(act==="logout"){ S.isAdmin=false; S.pw=""; lsSet("bento_admin_pw",""); render(); return; }
   if(act==="summode"){ S.sumMode=b.getAttribute("data-mode"); render(); return; }
   if(act==="copy"){
     var ta=$("sumtext"), txt=summaryText();
@@ -684,31 +937,24 @@ document.addEventListener("input", function(ev){
   if(k==="nm"){ S.name=ev.target.value; S.dirty=true; $("bar")._h=null; renderBar(phase(), shop()); }
   if(k==="nt"){ S.note=ev.target.value; S.dirty=true; $("bar")._h=null; renderBar(phase(), shop()); }
   if(k==="dl"){ S.adminDeadline=ev.target.value; }
-  if(k==="lp"){ S.loginPw=ev.target.value; }
-});
-document.addEventListener("keydown", function(ev){
-  if(ev.key==="Enter" && ev.target.id==="lp"){ var b=document.querySelector('[data-act="login"]'); if(b) b.click(); }
 });
 
 document.addEventListener("change", function(ev){
   var pid=ev.target.getAttribute && ev.target.getAttribute("data-paid");
   if(!pid) return;
   var val=ev.target.checked;
-  api({action:"admin_paid", pw:S.pw, pid:pid, paid:val}).then(function(res){
-    if(!res || !res.ok){ ev.target.checked=!val; toast(res && res.error || "更新失敗"); return; }
-    refresh();
-  }).catch(function(){ ev.target.checked=!val; toast("連線失敗，請稍後再試"); });
+  db.ref("orders/"+pid+"/paid").set(val).catch(function(){ ev.target.checked=!val; toast("連線失敗，請稍後再試"); });
 });
 
 /* ---------- boot ---------- */
 (function(){
   render();
-  if(!API_URL || API_URL.indexOf("script.google.com")<0) return;
-  // 主揪檢查和讀訂單同時送，不要一個等一個
-  if(S.pw) apiRetry({action:"checkAdmin", pw:S.pw}, 4).then(function(res){ S.isAdmin=!!(res&&res.ok); if(!S.isAdmin){ S.pw=""; lsSet("bento_admin_pw",""); } render(); }).catch(function(){});
-  refresh();
-  setInterval(function(){ if(!document.hidden && !S.busy) refresh(); }, 8000);
-  document.addEventListener("visibilitychange", function(){ if(!document.hidden) refresh(); });
+  if(!configured) return;
+  var fail=function(){ if(S.loading){ S.failed=true; S.loading=false; render(); } };
+  db.ref().on("value", function(snap){ onData(snap.val()); }, function(){ S.loading=true; fail(); });
+  setTimeout(fail, 15000);
+  // 截止時間是在瀏覽器判斷的，時間到要自己重畫
+  setInterval(function(){ if(S.loading || S.failed) return; var l=isLate(S.session); if(l!==S.late){ S.late=l; render(); } }, 10000);
 })();
 </script>
 </body>

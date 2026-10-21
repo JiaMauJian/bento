@@ -1,46 +1,57 @@
 # 團體訂便當
 
-同事打開網址就能點餐，不用登入。前端放在 GitHub Pages，訂單資料存在你的 Google 試算表。
+同事打開網址就能點餐，不用登入。整個網站只有一個 `index.html`，放在 GitHub Pages；訂單存在 Firebase 即時資料庫，大家的畫面會即時同步。
 
-## 一、建立後端（Google 試算表＋Apps Script）
+## 一、建立資料庫（Firebase，免費）
 
-1. 到 Google 雲端硬碟新增一份空白試算表，取名例如「訂便當」。
-2. 在試算表點「擴充功能 > Apps Script」，把編輯器裡原本的內容全部刪掉，貼上 `Code.gs` 的內容，按儲存。
-3. 點左側齒輪「專案設定」：
-   - 時區選「(GMT+08:00) 台北」。
-   - 往下找到「指令碼屬性」，新增一筆：屬性 `ADMIN_PASSWORD`，值填你自己想的主揪密碼。
-4. 點右上角「部署 > 新增部署作業」，類型選「網頁應用程式」：
-   - 執行身分：我
-   - 誰可以存取：所有人
-5. 按「部署」，第一次會要求授權，照畫面允許即可。
-6. 複製畫面上的「網頁應用程式網址」（`https://script.google.com/macros/s/.../exec`）。
+1. 到 <https://console.firebase.google.com/> 用 Google 帳號登入，點「建立專案」，名稱例如 `bento`，Google Analytics 可以關掉。
+2. 左側選單「建構 > Realtime Database」，點「建立資料庫」，位置選「新加坡 (asia-southeast1)」，模式選哪個都可以。
+3. 建好後到「規則」分頁，整段換成下面這樣，按「發布」：
 
-> 之後如果有修改 `Code.gs`，要到「部署 > 管理部署作業」編輯現有部署並選「新版本」，網址才會維持不變。
+   ```json
+   {
+     "rules": {
+       ".read": true,
+       ".write": true
+     }
+   }
+   ```
+
+4. 回到「資料」分頁，複製上方的網址（像 `https://bento-xxxx-default-rtdb.asia-southeast1.firebasedatabase.app`）。
 
 ## 二、設定前端
 
-用記事本打開 `index.html`，把開頭這一行的文字換成剛剛複製的網址：
+用記事本打開 `index.html`，把這一行的文字換成剛剛複製的網址：
 
 ```js
-var API_URL = "請貼上 Apps Script 網頁應用程式網址";
+var DB_URL = "請貼上 Firebase 即時資料庫網址";
 ```
-
-付款：頁面上只顯示金額，付款方式由主揪在 LINE 群組說明。
 
 ## 三、放到 GitHub Pages
 
-1. 登入 GitHub，右上角「+ > New repository」，名稱例如 `bento`，選 **Public**，按「Create repository」。
-2. 在新 repo 頁面點「uploading an existing file」，把 `index.html` 拖進去，按「Commit changes」。
-3. 到 repo 的「Settings > Pages」，Source 選「Deploy from a branch」，Branch 選 `main`、資料夾選 `/ (root)`，按「Save」。
-4. 等一兩分鐘，頁面上方會出現網址：`https://你的帳號.github.io/bento/`，把它丟到群組就可以了。
+1. 把 `index.html`（和 `menu.html`）上傳到一個 Public repo。
+2. 到 repo 的「Settings > Pages」，Source 選「Deploy from a branch」，Branch 選 `main`、資料夾選 `/ (root)`，按「Save」。
+3. 等一兩分鐘，頁面上方會出現網址：`https://你的帳號.github.io/bento/`，丟到群組就可以了。
 
 ## 使用方式
 
-- **主揪**：打開網址，捲到最下面點「主揪登入」，輸入密碼。同一個瀏覽器之後會記住，不用每次輸入。
-- **同事**：打開網址、填名字、點餐、送出。同一個瀏覽器可以回來修改或取消，換手機或換瀏覽器就改不到原本那筆。
+- **開單**：沒開單時頁面最上面就是選店家，選好店家和截止時間按「開始收單」。開單後，截止時間、結單、開新一輪的按鈕在頁面最下面。誰都可以操作。
+- **點餐**：填名字、點餐、送出。同一個瀏覽器可以回來修改或取消，換手機或換瀏覽器就改不到原本那筆。
+- **付款**：每個人旁邊有「已付」可以勾。
 
 ## 注意
 
-- Public repo 代表 `index.html` 任何人都看得到。密碼不在這個檔案裡，存在 Apps Script 的指令碼屬性中。
-- 不用登入的代價是只能靠同事自己填的名字認人，請大家填認得出來的名字。
-- 訂單明細也可以直接在 Google 試算表的 `orders` 工作表查看。
+- 沒有密碼，資料庫網址也寫在公開的 `index.html` 裡，所以任何拿到網址的人都能改訂單。同事之間用沒問題，不要拿來放敏感資料。
+- 截止時間是各自的瀏覽器判斷的，請大家手機時間不要亂調。
+- 訂單會保留到開單日的 3 天後，之後第一個打開頁面的人會自動把它清掉（天數改 `index.html` 的 `KEEP_DAYS`）。想提早清可以按「開新一輪」。
+- 訂單也可以直接在 Firebase 主控台的「資料」分頁查看或修改。
+
+## 更新花梅蘭的每月菜單
+
+花梅蘭每天菜單不同，資料是從店家的訂餐網站抓下來的。店家換新月份菜單後，在這個資料夾執行：
+
+```sh
+node tools/hua-menu.js
+```
+
+它會同時更新 `index.html` 和 `menu.html`，跑完看一下 `git diff` 再 commit。沒列到的日期就是店休，那天不能開花梅蘭的單。
