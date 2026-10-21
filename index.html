@@ -637,7 +637,7 @@ var TOKEN = lsGet("bento_token"); if(!TOKEN){ TOKEN=newToken(); lsSet("bento_tok
 
 var S = {
   loading:true, failed:false, session:null, late:false, orders:[], cart:{}, name:lsGet("bento_name"), note:"", dirty:false, round:null,
-  adminShop:"chunfu", adminDeadline:"10:30", sumMode:"item", confirmNew:false, busy:false, lastPhase:null
+  adminShop:"chunfu", adminDeadline:"10:30", sumMode:"item", busy:false, lastPhase:null
 };
 
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
@@ -767,7 +767,7 @@ function renderAdmin(ph, sh){
   } else {
     h+='<h2>主揪：已結單</h2><div class="row-ctl">';
     h+='<button class="btn ghost" data-act="reopen"'+dis+'>重新開放點餐</button>';
-    h+='<button class="btn danger" data-act="newround"'+dis+'>'+(S.confirmNew?"確定清除所有訂單？":"開新一輪")+'</button></div>';
+    h+='<button class="btn danger" data-act="newround"'+dis+'>'+"開新一輪"+'</button></div>';
     h+='<p class="hint">開新一輪會清除這次所有人的訂單，回到選店家。</p>';
   }
   h+='</section>';
@@ -906,7 +906,6 @@ var sessionRef=function(){ return db.ref("session"); };
 document.addEventListener("click", function(ev){
   var b=ev.target.closest("[data-act]"); if(!b || b.disabled) return;
   var act=b.getAttribute("data-act");
-  if(act!=="newround") S.confirmNew=false;
   if(act==="inc" || act==="dec"){
     var k=b.getAttribute("data-key"), q=(S.cart[k]||0)+(act==="inc"?1:-1);
     if(q<=0) delete S.cart[k]; else S.cart[k]=Math.min(q,99);
@@ -935,8 +934,6 @@ document.addEventListener("click", function(ev){
   if(act==="close"){ run(function(){ return sessionRef().update({ status:"closed" }); }, "已結單"); return; }
   if(act==="reopen"){ if(S.late) toast("截止時間已過，記得更新截止時間"); run(function(){ return sessionRef().update({ status:"open" }); }); return; }
   if(act==="newround"){
-    if(!S.confirmNew){ S.confirmNew=true; render(); return; }
-    S.confirmNew=false;
     run(function(){ return db.ref().update({ session:{ status:"idle", shop:S.session.shop }, orders:null }); }, "已清除，可以重新選店家"); return;
   }
   if(act==="summode"){ S.sumMode=b.getAttribute("data-mode"); render(); return; }
