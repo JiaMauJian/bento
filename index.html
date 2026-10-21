@@ -64,7 +64,6 @@ button{cursor:pointer}
 .shopbtn b{display:block;font-family:var(--serif);font-size:20px}
 .shopbtn span{font-size:13px;color:var(--muted)}
 .shopbtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft)}
-.shopbtn:disabled{opacity:.45;cursor:not-allowed}
 label.inline{display:flex;align-items:center;gap:8px;font-size:15px}
 input[type=time],input[type=text],input[type=password]{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;min-width:0}
 .btn{border:none;border-radius:8px;padding:10px 16px;font-weight:700;background:var(--ink);color:var(--sheet)}
@@ -342,272 +341,27 @@ var SHOPS = {
   hua: {
     name: "花梅蘭", phone: "0925-093-053", addr: "",
     rule: { type: "count", min: 3, label: "3 個便當以上才外送" }, deadline: "09:30",
-    note: "日式概念料理。每天菜單不同，加飯不加價，請於 9:30 前訂餐。飲料、單點不算外送份數，飲料甜度請寫在備註。",
-    /* 每月菜單從店家網站 monumental-sprinkles-8912d9.netlify.app 更新；沒列到的日期是店休 */
-    days: {
-      /* hua-days:start */
-      "2026-10-05": [
-        { title: "便當", items: [
-          { id: "h1005f1", name: "三鮮粥 (蝦仁、豬肉、花枝)", v: [["a","小",90],["b","大",100]] },
-          { id: "h1005f2", name: "塔塔醬炸豬排", v: [["x","",100]] },
-          { id: "h1005f3", name: "甘梅炸雞腿飯", v: [["x","",110]] },
-          { id: "h1005f4", name: "宮保嫩豬柳飯", v: [["x","",100]] },
-          { id: "h1005f5", name: "麻油雞丁飯+玉米蛋", v: [["x","",110]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1005d1", name: "松柏嶺冬片 (無糖限定)", v: [["x","",27]] }
-        ]}
-      ],
-      "2026-10-06": [
-        { title: "便當", items: [
-          { id: "h1006f1", name: "韓式辣醬豬五花飯", v: [["x","",100]] },
-          { id: "h1006f2", name: "紅燒軟骨飯", v: [["x","",100]] },
-          { id: "h1006f3", name: "低卡海鹽西芹手撕雞健康餐", v: [["x","",110]] },
-          { id: "h1006f4", name: "三杯雞腿丁 飯", v: [["x","",110]] },
-          { id: "h1006f5", name: "黒胡椒雞腿鐵板麵+荷包蛋", v: [["x","",120]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1006e1", name: "元氣三明治(燻雞)(附小冰紅)", v: [["x","",65]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1006d1", name: "蕎麥鮮奶茶(無糖、微糖)", v: [["x","",50]] }
-        ]}
-      ],
-      "2026-10-07": [
-        { title: "便當", items: [
-          { id: "h1007f1", name: "炒泡麵+烤腿排", v: [["a","小",80],["b","大",90]] },
-          { id: "h1007f2", name: "酥炸無骨雞排飯+山藥卷", v: [["x","",100]] },
-          { id: "h1007f3", name: "低卡黑胡椒雞胸丁健康餐", v: [["x","",110]] },
-          { id: "h1007f4", name: "鹹豬肉飯", v: [["x","",100]] },
-          { id: "h1007f5", name: "咖哩牛肉飯", v: [["x","",130]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1007e1", name: "炸大雞排(單點)", v: [["x","",80]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1007d1", name: "咖啡牛奶(甜度固定)", v: [["x","",45]] }
-        ]}
-      ],
-      "2026-10-08": [
-        { title: "便當", items: [
-          { id: "h1008f1", name: "楓糖三杯雞", v: [["x","",100]] },
-          { id: "h1008f2", name: "紐奧良烤腿排+麻油米血飯", v: [["x","",100]] },
-          { id: "h1008f3", name: "海南雞佐蒜蓉醬", v: [["x","",110]] },
-          { id: "h1008f4", name: "椒麻皮蛋豬肉飯", v: [["x","",100]] },
-          { id: "h1008f5", name: "黑胡椒烤肉飯+荷包蛋", v: [["x","",100]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1008e1", name: "綜合壽司", v: [["x","",115]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1008d1", name: "綠茶(無糖、微糖)", v: [["x","",27]] }
-        ]}
-      ],
-      "2026-10-12": [
-        { title: "便當", items: [
-          { id: "h1012f1", name: "椒麻拌麵+酥炸腿排", v: [["x","",100]] },
-          { id: "h1012f2", name: "低卡椒鹽雞胸丁健康餐", v: [["x","",110]] },
-          { id: "h1012f3", name: "韓式泡菜豬五花飯", v: [["x","",100]] },
-          { id: "h1012f4", name: "南瓜滷肉飯", v: [["x","",100]] },
-          { id: "h1012f5", name: "嫩烤腿排+雞柳條雙拼飯", v: [["x","",110]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1012d1", name: "梅之綠茶(無糖、微糖)", v: [["x","",36]] }
-        ]}
-      ],
-      "2026-10-13": [
-        { title: "便當", items: [
-          { id: "h1013f1", name: "香菇玉米滑蛋粥+酥腿排", v: [["x","",100]] },
-          { id: "h1013f2", name: "糖醋彩椒咕咾肉飯", v: [["x","",100]] },
-          { id: "h1013f3", name: "味噌炒豬柳+蒸蛋", v: [["x","",100]] },
-          { id: "h1013f4", name: "煙燻烤骨腿飯", v: [["x","",100]] },
-          { id: "h1013f5", name: "三寶飯（控肉、柳葉魚、蝦仁)", v: [["x","",120]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1013e1", name: "綜合壽司", v: [["x","",115]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1013d1", name: "綠茶(無糖、微糖)", v: [["x","",27]] }
-        ]}
-      ],
-      "2026-10-14": [
-        { title: "便當", items: [
-          { id: "h1014f1", name: "炒泡麵+烤腿排", v: [["a","小",80],["b","大",90]] },
-          { id: "h1014f2", name: "沙茶豬肉燴飯", v: [["x","",100]] },
-          { id: "h1014f3", name: "雞肉拌飯+蝦仁蛋", v: [["x","",120]] },
-          { id: "h1014f4", name: "低卡彩椒嫩雞胸丁健康餐", v: [["x","",110]] },
-          { id: "h1014f5", name: "蒲燒鯛魚+鹽酥雞雙拼飯", v: [["x","",110]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1014e1", name: "炸大雞排(單點)", v: [["x","",80]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1014d1", name: "摩斯紅茶(無糖、微糖)", v: [["x","",27]] }
-        ]}
-      ],
-      "2026-10-15": [
-        { title: "便當", items: [
-          { id: "h1015f1", name: "泡菜乾拌媽媽麵", v: [["a","小",80],["b","大",90]] },
-          { id: "h1015f2", name: "韓式味噌辣醬豬肉飯", v: [["x","",110]] },
-          { id: "h1015f3", name: "金莎嫩烤雞腿飯+蒸蛋", v: [["x","",115]] },
-          { id: "h1015f4", name: "海鹽豬柳+鯖魚健康餐", v: [["x","",120]] },
-          { id: "h1015f5", name: "彩椒甜豆炒雞丁飯", v: [["x","",100]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1015d1", name: "杏仁凍蕎麥茶(無糖、微糖)", v: [["x","",45]] }
-        ]}
-      ],
-      "2026-10-16": [
-        { title: "便當", items: [
-          { id: "h1016f1", name: "章魚燒醬豬排飯", v: [["x","",100]] },
-          { id: "h1016f2", name: "杏鮑菇白醬嫩腿丁飯", v: [["x","",110]] },
-          { id: "h1016f3", name: "控肉飯+滷蛋", v: [["x","",110]] },
-          { id: "h1016f4", name: "泰式椒麻無骨雞腿飯", v: [["x","",120]] },
-          { id: "h1016f5", name: "油蔥雞肉飯+油豆腐", v: [["x","",100]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1016e1", name: "綜合水餃10顆", v: [["x","",55]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1016d1", name: "綠茶拿鐵(無糖、微糖)", v: [["x","",50]] }
-        ]}
-      ],
-      "2026-10-19": [
-        { title: "便當", items: [
-          { id: "h1019f1", name: "黒胡椒烤無骨雞腿飯", v: [["x","",110]] },
-          { id: "h1019f2", name: "泰式打拋豬飯+炸銀絲捲", v: [["x","",100]] },
-          { id: "h1019f3", name: "低卡玫瑰鹽雞胸丁健康餐", v: [["x","",110]] },
-          { id: "h1019f4", name: "烤鯖魚+香腸飯", v: [["x","",100]] },
-          { id: "h1019f5", name: "栗子燒雞腿丁飯", v: [["x","",110]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1019d1", name: "甘蔗青(無糖、微糖)", v: [["x","",54]] }
-        ]}
-      ],
-      "2026-10-20": [
-        { title: "便當", items: [
-          { id: "h1020f1", name: "塔塔醬炸魚排雙拼豬柳飯", v: [["x","",110]] },
-          { id: "h1020f2", name: "蒜香番茄杏鮑菇燉雞飯", v: [["x","",100]] },
-          { id: "h1020f3", name: "蒙古烤肉燴麵+荷包蛋", v: [["x","",100]] },
-          { id: "h1020f4", name: "豆乳烤無骨雞腿飯", v: [["x","",110]] },
-          { id: "h1020f5", name: "蕃茄醬炸豬排飯+薯泥沙拉", v: [["x","",110]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1020e1", name: "元氣三明治(燻雞)(附小冰紅)", v: [["x","",65]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1020d1", name: "小珍珠奶茶(無糖、微糖)", v: [["x","",50]] }
-        ]}
-      ],
-      "2026-10-21": [
-        { title: "便當", items: [
-          { id: "h1021f1", name: "炒泡麵+烤腿排", v: [["a","小",80],["b","大",90]] },
-          { id: "h1021f2", name: "糖醋排骨飯+山藥卷", v: [["x","",100]] },
-          { id: "h1021f3", name: "沙茶烤肉片飯", v: [["x","",100]] },
-          { id: "h1021f4", name: "西芹炒雙鮮飯(魷魚、蝦仁)", v: [["x","",115]] },
-          { id: "h1021f5", name: "親子丼飯", v: [["x","",100]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1021e1", name: "炸大雞排(單點)", v: [["x","",80]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1021d1", name: "紅烏龍(無糖、微糖)", v: [["x","",27]] }
-        ]}
-      ],
-      "2026-10-22": [
-        { title: "便當", items: [
-          { id: "h1022f1", name: "椒麻皮蛋肉醬吻仔魚乾拌麵", v: [["x","",100]] },
-          { id: "h1022f2", name: "酥炸羅勒腿排飯+菜圃蛋", v: [["x","",100]] },
-          { id: "h1022f3", name: "紅糟肉+雞米花雙拼飯", v: [["x","",110]] },
-          { id: "h1022f4", name: "低卡椒鹽碎腿肉健康餐", v: [["x","",110]] },
-          { id: "h1022f5", name: "炸豬排蛋包飯+炸薯條", v: [["x","",120]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1022d1", name: "摩斯紅茶(無糖、微糖)", v: [["x","",27]] }
-        ]}
-      ],
-      "2026-10-23": [
-        { title: "便當", items: [
-          { id: "h1023f1", name: "什錦炒麵+炸肉排", v: [["a","小",90],["b","大",100]] },
-          { id: "h1023f2", name: "紅燒滷肉飯", v: [["x","",100]] },
-          { id: "h1023f3", name: "泰式酸辣酥炸雞腿丁飯", v: [["x","",110]] },
-          { id: "h1023f4", name: "水蓮海鹽雞胸丁健康餐", v: [["x","",110]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1023e1", name: "炸大雞排(單點)", v: [["x","",80]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1023d1", name: "多多綠(無糖、微糖)", v: [["x","",45]] }
-        ]}
-      ],
-      "2026-10-27": [
-        { title: "便當", items: [
-          { id: "h1027f1", name: "麻辣鍋（附媽媽拉麵)", v: [["x","",100]] },
-          { id: "h1027f2", name: "油蔥雞肉碎腿肉飯", v: [["x","",100]] },
-          { id: "h1027f3", name: "梅子醬燒豬飯", v: [["x","",100]] },
-          { id: "h1027f4", name: "魷米花+檸檬雞腿雙拼飯", v: [["x","",110]] },
-          { id: "h1027f5", name: "唐揚雞咖哩飯", v: [["x","",120]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1027d1", name: "青茶(無糖、微糖)", v: [["x","",27]] }
-        ]}
-      ],
-      "2026-10-28": [
-        { title: "便當", items: [
-          { id: "h1028f1", name: "紅燒腿庫飯", v: [["x","",100]] },
-          { id: "h1028f2", name: "脆皮紅糟肉飯", v: [["x","",100]] },
-          { id: "h1028f3", name: "韓式蜂蜜辣醬炸雞飯", v: [["x","",100]] },
-          { id: "h1028f4", name: "口水雞飯+炒蛋", v: [["x","",110]] },
-          { id: "h1028f5", name: "玫瑰鹽雞胸丁健康餐", v: [["x","",110]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1028e1", name: "炸大雞排(單點)", v: [["x","",80]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1028d1", name: "紅茶拿鐵(無糖、微糖)", v: [["x","",50]] }
-        ]}
-      ],
-      "2026-10-29": [
-        { title: "便當", items: [
-          { id: "h1029f1", name: "客家炒粄條+炸腿排", v: [["x","",100]] },
-          { id: "h1029f2", name: "香滷雞腿飯", v: [["x","",105]] },
-          { id: "h1029f3", name: "塔塔醬炸魚排雙拼炒肉飯", v: [["x","",110]] },
-          { id: "h1029f4", name: "泡菜炒雞腿丁飯", v: [["x","",110]] },
-          { id: "h1029f5", name: "墨西哥辣椒炒肉", v: [["x","",100]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1029e1", name: "綜合壽司", v: [["x","",115]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1029d1", name: "金桔梅子紅(甜度固定)", v: [["x","",45]] }
-        ]}
-      ],
-      "2026-10-30": [
-        { title: "便當", items: [
-          { id: "h1030f1", name: "橙汁排骨飯+玉米蛋", v: [["x","",100]] },
-          { id: "h1030f2", name: "酸菜白肉鍋 (附冬粉)", v: [["x","",100]] },
-          { id: "h1030f3", name: "辣炒豬肉飯", v: [["x","",100]] },
-          { id: "h1030f4", name: "椒鹽嫩雞胸丁健康餐", v: [["x","",110]] },
-          { id: "h1030f5", name: "泰式椒麻無骨雞腿飯", v: [["x","",120]] }
-        ]},
-        { title: "單點", nocount: 1, items: [
-          { id: "h1030e1", name: "綜合水餃10顆", v: [["x","",55]] }
-        ]},
-        { title: "飲料", nocount: 1, items: [
-          { id: "h1030d1", name: "柳橙綠(無糖、微糖)", v: [["x","",59]] }
-        ]}
-      ]
-      /* hua-days:end */
-    }
+    note: "日式概念料理。每天菜單不同，這裡只放常出現的品項，不是每天都有，請先看店家當日菜單；加飯不加價，請於 9:30 前訂餐。飲料、單點不算外送份數；飲料每天不同，請寫在備註。",
+    groups: [
+      { title: "便當", items: [
+        { id: "h1", name: "炒泡麵+烤腿排", v: [["a","小",80],["b","大",90]] },
+        { id: "h2", name: "什錦炒麵+炸肉排", v: [["a","小",90],["b","大",100]] },
+        { id: "h3", name: "泡菜乾拌媽媽麵", v: [["a","小",80],["b","大",90]] },
+        { id: "h4", name: "三鮮粥", sub: "蝦仁、豬肉、花枝", v: [["a","小",90],["b","大",100]] },
+        { id: "h5", name: "泰式椒麻無骨雞腿飯", v: [["x","",120]] }
+      ]},
+      { title: "單點", sub: "不算外送份數", nocount: 1, items: [
+        { id: "h6", name: "炸大雞排", v: [["x","",80]] },
+        { id: "h7", name: "綜合壽司", v: [["x","",115]] },
+        { id: "h8", name: "綜合水餃", sub: "10 顆", v: [["x","",55]] },
+        { id: "h9", name: "元氣三明治（燻雞）", sub: "附小冰紅", v: [["x","",65]] }
+      ]}
+    ]
   }
 };
 
-/* 有 days 的店家每天菜單不同，沒有那天就是店休 */
-function groupsOf(sh, date){ return sh.days ? sh.days[date] || null : sh.groups; }
-function allGroups(sh){ return sh.days ? [].concat.apply([], Object.keys(sh.days).map(function(d){ return sh.days[d]; })) : sh.groups; }
-
 /* key -> {label, price, shop, order, nocount} */
-var ITEMS = {}; (function(){ var n=0; Object.keys(SHOPS).forEach(function(sk){ allGroups(SHOPS[sk]).forEach(function(g){ g.items.forEach(function(it){ it.v.forEach(function(v){
+var ITEMS = {}; (function(){ var n=0; Object.keys(SHOPS).forEach(function(sk){ SHOPS[sk].groups.forEach(function(g){ g.items.forEach(function(it){ it.v.forEach(function(v){
   var key = it.id + "." + v[0];
   ITEMS[key] = { label: it.name + (v[1] ? "（" + v[1] + "）" : ""), price: v[2], shop: sk, order: n++, nocount: !!g.nocount };
 }); }); }); }); })();
@@ -736,8 +490,7 @@ function renderAdmin(ph, sh){
   if(ph==="idle"){
     h+='<h2>今天訂哪一家？</h2><div class="shops">';
     Object.keys(SHOPS).forEach(function(k){
-      var off=!groupsOf(SHOPS[k], today());
-      h+='<button class="shopbtn" data-act="pick" data-shop="'+k+'" aria-pressed="'+(S.adminShop===k)+'"'+(off?' disabled':'')+'><b>'+esc(SHOPS[k].name)+'</b><span>'+esc(off?"今天沒有菜單（店休）":SHOPS[k].rule.label)+'</span></button>';
+      h+='<button class="shopbtn" data-act="pick" data-shop="'+k+'" aria-pressed="'+(S.adminShop===k)+'"><b>'+esc(SHOPS[k].name)+'</b><span>'+esc(SHOPS[k].rule.label)+'</span></button>';
     });
     h+='</div><div class="row-ctl"><label class="inline">截止時間 <input id="dl" type="time" value="'+esc(S.adminDeadline)+'" data-in="dl"></label>';
     h+='<button class="btn primary" data-act="open"'+dis+'>開始收單</button></div>';
@@ -774,7 +527,7 @@ function renderStatus(ph, sh){
 function renderMenu(ph, sh){
   if(ph!=="open"){ patch($("menu"), ""); return; }
   var h='';
-  (groupsOf(sh, S.session.date) || []).forEach(function(g){
+  sh.groups.forEach(function(g){
     h+='<section class="sec"><h2>'+esc(g.title)+(g.sub?' <small>'+esc(g.sub)+'</small>':'')+'</h2>';
     g.items.forEach(function(it){
       var any=false, vh='';
@@ -910,7 +663,6 @@ document.addEventListener("click", function(ev){
   if(act==="cancel"){ if(!canOrder()) return; run(function(){ return myRef().remove(); }, "已取消你的訂單", function(){ S.cart={}; S.dirty=false; }); return; }
   if(act==="open"){
     if(!S.adminDeadline){ toast("請設定截止時間"); return; }
-    if(!groupsOf(SHOPS[S.adminShop], today())){ toast(SHOPS[S.adminShop].name+"今天沒有菜單"); return; }
     run(function(){ return db.ref().update({ session:{ shop:S.adminShop, deadline:S.adminDeadline, date:today(), status:"open", round:Date.now() }, orders:null }); },
       "已開始收單，把網址丟到群組吧"); return;
   }
