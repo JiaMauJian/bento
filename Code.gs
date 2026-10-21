@@ -7,7 +7,7 @@
 var SHEET_NAME = "orders";
 var HEADERS = ["round", "token", "pid", "name", "lines", "paid", "updatedAt", "note"];
 var TZ = "Asia/Taipei";
-var SHOP_KEYS = ["chunfu", "yang"];
+var SHOP_KEYS = ["chunfu", "yang", "bear", "lan"];
 
 function doGet(e) {
   return json_({ ok: true, msg: "bento api is running" });
