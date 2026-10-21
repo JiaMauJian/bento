@@ -46,3 +46,11 @@ var DB_URL = "請貼上 Firebase 即時資料庫網址";
 - 訂單會保留到開單日的 3 天後，之後第一個打開頁面的人會自動把它清掉（天數改 `index.html` 的 `KEEP_DAYS`）。想提早清可以按「開新一輪」。
 - 訂單也可以直接在 Firebase 主控台的「資料」分頁查看或修改。
 
+## 花梅蘭的每日菜單
+
+花梅蘭每天菜單不同，資料是從店家的訂餐網站抓下來的。GitHub Actions 每天早上 6:00 會自動跑 `tools/hua-menu.js` 抓新菜單，有變動就自動 commit，不用手動更新。
+
+- 想馬上更新：到 GitHub repo 的「Actions > 更新花梅蘭菜單 > Run workflow」，或在電腦上跑 `node tools/hua-menu.js` 再 commit。
+- 店家還沒公布新月份的菜單時，花梅蘭會先顯示常見品項（`groups`），一樣可以開單。
+- 菜單範圍內沒列到的日期是店休，那天不能開花梅蘭的單。
+- 如果店家網站改版、抓不到菜單，Actions 會失敗，GitHub 會寄 email 給你。
