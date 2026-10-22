@@ -71,7 +71,7 @@ button{cursor:pointer}
 .shopbtn b{display:block;font-family:var(--serif);font-size:18px;line-height:1.4}
 .shopbtn span{font-size:13px;color:var(--muted)}
 .shopbtn:hover:not(:disabled){border-color:var(--muted)}
-.shopbtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft)}
+.shopbtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft);box-shadow:inset 0 0 0 1.5px var(--seal)}
 .shopbtn[aria-pressed="true"]::after{content:"✓";position:absolute;top:50%;right:12px;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:var(--seal);color:var(--on-seal);font-size:12px;font-weight:700;display:grid;place-items:center}
 .shopbtn:disabled{opacity:.45;cursor:not-allowed}
 .dates{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;margin-bottom:22px}
@@ -728,8 +728,8 @@ function onData(v){
   });
   S.late = isLate(S.session);
   if(S.loading){
+    if(S.session && SHOPS[S.session.shop]){ S.adminShop=S.session.shop; if(SHOPS[S.adminShop].deadline) S.adminDeadline=SHOPS[S.adminShop].deadline; }
     if(S.session && S.session.deadline) S.adminDeadline=S.session.deadline;
-    if(S.session && SHOPS[S.session.shop]) S.adminShop=S.session.shop;
   }
   S.loading=false; S.failed=false; syncFromServer(); render();
 }
