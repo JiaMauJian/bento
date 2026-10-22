@@ -250,6 +250,28 @@ var SHOPS = {
       ]}
     ]
   },
+  zheng: {
+    name: "正忠排骨飯（永康店）", phone: "06-3021988",
+    rule: "5 個便當外送",
+    note: "請於 9:00 前打電話訂餐。店家會依外送路程調整最低便當量。",
+    groups: [
+      { title: "便當", items: [
+        { name: "爌肉飯", v: [["",100]] },
+        { name: "正忠排骨飯", v: [["",100]] },
+        { name: "糖醋小排飯", v: [["",100]] },
+        { name: "黑胡椒豬排飯", v: [["",100]] },
+        { name: "鮮魚飯", v: [["",105]] },
+        { name: "三杯雞肉飯", v: [["",105]] },
+        { name: "宮保雞丁飯", v: [["",105]] },
+        { name: "雞排飯", v: [["",115]] },
+        { name: "炸雞腿飯", v: [["",120]] },
+        { name: "燒雞腿飯", v: [["",120]] },
+        { name: "燒全翅飯", v: [["",120]] },
+        { name: "大比目魚飯", v: [["",120]] },
+        { name: "虱目魚肚飯", v: [["",180]] }
+      ]}
+    ]
+  },
   hua: {
     name: "花梅蘭", phone: "0925-093-053",
     rule: "3 個便當外送",
@@ -546,7 +568,7 @@ function show(key){
     groups = pickedDay ? sh.days[pickedDay] : sh.groups;
   }
   h += '<section class="info"><h2>'+esc(sh.name)+'</h2><dl>';
-  h += '<dt>電話</dt><dd><a href="tel:'+esc(sh.phone)+'">'+esc(sh.phone)+'</a></dd>';
+  if(sh.phone) h += '<dt>電話</dt><dd><a href="tel:'+esc(sh.phone)+'">'+esc(sh.phone)+'</a></dd>';
   if(sh.addr) h += '<dt>地址</dt><dd>'+esc(sh.addr)+'</dd>';
   h += '<dt>外送</dt><dd class="rule">'+esc(sh.rule)+'</dd>';
   h += '<dt>備註</dt><dd>'+esc(sh.note)+'</dd>';

@@ -343,6 +343,28 @@ var SHOPS = {
       ]}
     ]
   },
+  zheng: {
+    name: "正忠排骨飯（永康店）", phone: "06-3021988", addr: "",
+    rule: { type: "count", min: 5, label: "5 個便當以上才外送" }, deadline: "08:45",
+    note: "請於 9:00 前打電話訂餐。店家會依外送路程調整最低便當量。",
+    groups: [
+      { title: "便當", items: [
+        { id: "z1", name: "爌肉飯", v: [["x","",100]] },
+        { id: "z2", name: "正忠排骨飯", v: [["x","",100]] },
+        { id: "z3", name: "糖醋小排飯", v: [["x","",100]] },
+        { id: "z4", name: "黑胡椒豬排飯", v: [["x","",100]] },
+        { id: "z5", name: "鮮魚飯", v: [["x","",105]] },
+        { id: "z6", name: "三杯雞肉飯", v: [["x","",105]] },
+        { id: "z7", name: "宮保雞丁飯", v: [["x","",105]] },
+        { id: "z8", name: "雞排飯", v: [["x","",115]] },
+        { id: "z9", name: "炸雞腿飯", v: [["x","",120]] },
+        { id: "z10", name: "燒雞腿飯", v: [["x","",120]] },
+        { id: "z11", name: "燒全翅飯", v: [["x","",120]] },
+        { id: "z12", name: "大比目魚飯", v: [["x","",120]] },
+        { id: "z13", name: "虱目魚肚飯", v: [["x","",180]] }
+      ]}
+    ]
+  },
   hua: {
     name: "花梅蘭", phone: "0925-093-053", addr: "",
     rule: { type: "count", min: 3, label: "3 個便當以上才外送" }, deadline: "09:30",
@@ -752,7 +774,7 @@ function renderHeader(ph, sh){
   } else {
     h+='<div class="date">'+esc(prettyDate(S.session.date))+'　截止 '+esc(S.session.deadline)+'</div>';
     h+='<h1 class="shop">'+esc(sh.name)+'</h1>';
-    h+='<p class="meta"><a href="tel:'+esc(sh.phone)+'">'+esc(sh.phone)+'</a>　'+esc(sh.addr)+'</p>';
+    if(sh.phone||sh.addr) h+='<p class="meta">'+(sh.phone?'<a href="tel:'+esc(sh.phone)+'">'+esc(sh.phone)+'</a>　':'')+esc(sh.addr)+'</p>';
     h+='<p class="rule-line">'+esc(sh.rule.label)+'　<span style="font-weight:400;color:var(--muted)">'+esc(sh.note)+'</span></p>';
   }
   h+='</div><div class="seal '+seal[1]+stamp+'" aria-label="狀態：'+seal[0]+'">'+seal[0]+'</div></header>';
