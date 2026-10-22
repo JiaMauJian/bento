@@ -822,12 +822,13 @@ function renderHeader(ph, sh){
   var stamp = S.lastPhase && S.lastPhase!==ph && ph!=="idle" ? " stamp" : "";
   var h='<header class="hdr"><div>';
   if(ph==="idle"){
-    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">今天訂便當</h1><p class="meta">選好店家和截止時間就能開始收單。</p>';
+    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">今天訂便當</h1><p class="meta">選好店家和截止時間就能開始收單。　<a href="menu.html">看各家菜單</a></p>';
   } else {
     h+='<div class="date">'+esc(prettyDate(S.session.date))+'　截止 '+esc(S.session.deadline)+'</div>';
     h+='<h1 class="shop">'+esc(sh.name)+'</h1>';
     if(sh.phone||sh.addr) h+='<p class="meta">'+(sh.phone?'<a href="tel:'+esc(sh.phone)+'">'+esc(sh.phone)+'</a>　':'')+esc(sh.addr)+'</p>';
     h+='<p class="rule-line">'+esc(sh.rule.label)+'　<span style="font-weight:400;color:var(--muted)">'+esc(sh.note)+'</span></p>';
+    h+='<p class="meta"><a href="menu.html#'+esc(S.session.shop)+'">看完整菜單</a></p>';
   }
   h+='</div><div class="seal '+seal[1]+stamp+'" aria-label="狀態：'+seal[0]+'">'+seal[0]+'</div></header>';
   patch($("hdr"), h);
