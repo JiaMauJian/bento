@@ -59,16 +59,28 @@ button{cursor:pointer}
 .panel h2,.sec h2{font-size:17px;margin:0 0 10px;font-weight:700}
 .owner{border-left:4px solid var(--seal)}
 .row-ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.shops{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.shopbtn{text-align:left;background:var(--paper);border:2px solid var(--rule);border-radius:10px;padding:12px}
-.shopbtn b{display:block;font-family:var(--serif);font-size:20px}
+/* 開單設定：步驟編號用 counter，花梅蘭多一步選日期也會自動編號 */
+.setup{counter-reset:step;padding:18px}
+.setup h2{display:flex;align-items:center;gap:8px}
+.setup h2::before{counter-increment:step;content:counter(step);display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--sheet);font-size:13px;line-height:1}
+.shops{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px}
+.shopbtn{position:relative;text-align:left;background:var(--sheet);border:1.5px solid var(--rule);border-radius:10px;padding:10px 38px 10px 14px;transition:border-color .15s,background-color .15s}
+.shopbtn b{display:block;font-family:var(--serif);font-size:18px;line-height:1.4}
 .shopbtn span{font-size:13px;color:var(--muted)}
+.shopbtn:hover:not(:disabled){border-color:var(--muted)}
 .shopbtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft)}
+.shopbtn[aria-pressed="true"]::after{content:"✓";position:absolute;top:50%;right:12px;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:var(--seal);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
 .shopbtn:disabled{opacity:.45;cursor:not-allowed}
-.dates{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-.datebtn{background:var(--paper);border:2px solid var(--rule);border-radius:10px;padding:8px 12px;font-size:15px}
+.dates{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;margin-bottom:22px}
+.datebtn{background:var(--sheet);border:1.5px solid var(--rule);border-radius:10px;padding:6px 4px;text-align:center;line-height:1.35;transition:border-color .15s,background-color .15s}
 .datebtn small{display:block;font-size:12px;color:var(--muted)}
-.datebtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft)}
+.datebtn b{font-size:17px}
+.datebtn:hover{border-color:var(--muted)}
+.datebtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal);color:#fff}
+.datebtn[aria-pressed="true"] small{color:inherit;opacity:.85}
+.go{display:flex;gap:10px;align-items:stretch}
+.go input[type=time]{font-size:17px;padding:8px 12px}
+.go .btn{flex:1;font-size:16px;padding:12px 16px}
 label.inline{display:flex;align-items:center;gap:8px;font-size:15px}
 input[type=time],input[type=text],input[type=password]{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;min-width:0}
 .btn{border:none;border-radius:8px;padding:10px 16px;font-weight:700;background:var(--ink);color:var(--sheet)}
@@ -784,7 +796,7 @@ function renderHeader(ph, sh){
 /* 沒開單時，選店家放最上面；開單後主揪按鈕移到頁尾，不擋點餐 */
 function renderAdmin(ph, sh){
   var dis=S.busy?' disabled':'';
-  var h='<section class="panel owner" aria-label="主揪設定">';
+  var h='<section class="panel '+(ph==="idle"?"setup":"owner")+'" aria-label="主揪設定">';
   if(ph==="idle"){
     h+='<h2>今天訂哪一家？</h2><div class="shops">';
     /* 每天菜單不同的店（花梅蘭）可以預訂，今天店休也能選之後的日子 */
@@ -797,11 +809,12 @@ function renderAdmin(ph, sh){
       var sel=adminDate();
       h+='<h2>訂哪一天？</h2><div class="dates">';
       bookDays(SHOPS[S.adminShop]).forEach(function(d){
-        h+='<button class="datebtn" data-act="day" data-date="'+d+'" aria-pressed="'+(d===sel)+'">'+esc(prettyDate(d))+(d===today()?'<small>今天</small>':'')+'</button>';
+        var dd=new Date(d+"T00:00:00");
+        h+='<button class="datebtn" data-act="day" data-date="'+d+'" aria-pressed="'+(d===sel)+'"><small>'+(d===today()?"今天":"週"+"日一二三四五六".charAt(dd.getDay()))+'</small><b class="num">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</b></button>';
       });
       h+='</div>';
     }
-    h+='<div class="row-ctl"><label class="inline">截止時間 <input id="dl" type="time" value="'+esc(S.adminDeadline)+'" data-in="dl"></label>';
+    h+='<h2>幾點截止？</h2><div class="go"><input id="dl" type="time" aria-label="截止時間" value="'+esc(S.adminDeadline)+'" data-in="dl">';
     h+='<button class="btn primary" data-act="open"'+dis+'>開始收單</button></div>';
     h+='<p class="hint">開單後把這頁的網址丟到群組，同事就能點餐。</p>';
   } else if(ph==="open" || ph==="late"){
