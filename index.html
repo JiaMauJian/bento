@@ -62,7 +62,7 @@ button{cursor:pointer}
 .panel h2,.sec h2{font-size:17px;margin:0 0 10px;font-weight:700}
 .owner{border-left:4px solid var(--seal)}
 .row-ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-/* 開單設定：步驟編號用 counter，花梅蘭多一步選日期也會自動編號 */
+/* 開單設定：步驟編號用 counter */
 .setup{counter-reset:step;padding:18px}
 .setup h2{display:flex;align-items:center;gap:8px}
 .setup h2::before{counter-increment:step;content:counter(step);display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--sheet);font-size:13px;line-height:1}
@@ -257,7 +257,7 @@ var SHOPS = {
   },
   bear: {
     name: "熊仔廚房", phone: "0977-352-388", addr: "新市區華興街18號",
-    rule: { type: "amount", min: 500, label: "滿 500 元才外送" },
+    rule: { type: "amount", min: 500, label: "滿 500 元才外送" }, off: [1],
     note: "週日晚上及週一公休，臨時公休會在粉專公告。價格 2026/1/1 起適用。",
     groups: [
       { title: "炒飯", sub: "可選醬油／番茄口味、加辣；加飯 +$10", items: [
@@ -321,7 +321,7 @@ var SHOPS = {
   },
   lan: {
     name: "藍田家", phone: "0929-252-519", addr: "善化區中山路446號",
-    rule: { type: "count", min: 5, label: "5 份以上才外送" },
+    rule: { type: "count", min: 5, label: "5 份以上才外送" }, off: [0],
     note: "2 公里內 5 份以上外送，2～3 公里 6 份以上，每多 1 公里加 1 份；大量訂餐請提前 1 天來電。營業 11:00～14:00、17:00～20:30（售完為止），週日公休。",
     groups: [
       { title: "個人餐", sub: "圓盒：主食＋2 樣配菜；餐盒：主食＋6 樣配菜＋例湯", items: [
@@ -774,15 +774,16 @@ var SHOPS = {
 /* 有 days 的店家每天菜單不同：菜單範圍內沒列到的日子是店休，超過範圍（還沒更新）就用 groups 的常見品項 */
 function lastDay(sh){ return Object.keys(sh.days).sort().pop() || ""; }
 function groupsOf(sh, date){ return !sh.days ? sh.groups : sh.days[date] || (date > lastDay(sh) ? sh.groups : null); }
-/* 可以開單的日子：今天以後有菜單的日期；菜單還沒更新到今天就只能開今天（用常見品項） */
-function bookDays(sh){
-  var ds=Object.keys(sh.days).filter(function(d){ return d>=today(); }).sort();
-  return ds.length ? ds : (groupsOf(sh, today()) ? [today()] : []);
+/* 可以開單的日子：今天起兩週 */
+var BOOK_DAYS = 14;
+function bookDays(){
+  var ds=[], d=new Date(today()+"T00:00:00");
+  for(var i=0;i<BOOK_DAYS;i++){ ds.push(d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())); d.setDate(d.getDate()+1); }
+  return ds;
 }
-function adminDate(){
-  var sh=SHOPS[S.adminShop]; if(!sh.days) return today();
-  var ds=bookDays(sh); return ds.indexOf(S.adminDate)>=0 ? S.adminDate : ds[0];
-}
+function adminDate(){ return bookDays().indexOf(S.adminDate)>=0 ? S.adminDate : today(); }
+/* off 是固定公休的星期幾（0 是週日） */
+function openOn(sh, date){ return !!groupsOf(sh, date) && (sh.off||[]).indexOf(new Date(date+"T00:00:00").getDay())<0; }
 function allGroups(sh){ return sh.days ? [].concat.apply(sh.groups, Object.keys(sh.days).map(function(d){ return sh.days[d]; })) : sh.groups; }
 
 /* key -> {label, price, shop, order, nocount} */
@@ -897,7 +898,7 @@ function renderHeader(ph, sh){
   var stamp = S.lastPhase && S.lastPhase!==ph && ph!=="idle" ? " stamp" : "";
   var h='<header class="hdr"><div>';
   if(ph==="idle"){
-    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">今天訂便當</h1><p class="meta">選好店家和截止時間就能開始收單。　<a href="menu.html">看各家菜單</a></p>';
+    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">今天訂便當</h1><p class="meta">選好日期、店家和截止時間就能開始收單。　<a href="menu.html">看各家菜單</a></p>';
   } else {
     h+='<div class="date">'+esc(prettyDate(S.session.date))+'　截止 '+esc(S.session.deadline)+'</div>';
     h+='<h1 class="shop">'+esc(sh.name)+'</h1>';
@@ -914,22 +915,19 @@ function renderAdmin(ph, sh){
   var dis=S.busy?' disabled':'';
   var h='<section class="panel '+(ph==="idle"?"setup":"owner")+'" aria-label="主揪設定">';
   if(ph==="idle"){
-    h+='<h2>今天訂哪一家？</h2><div class="shops">';
-    /* 每天菜單不同的店（花梅蘭）可以預訂，今天店休也能選之後的日子 */
-    Object.keys(SHOPS).forEach(function(k){
-      var sh=SHOPS[k], off = sh.days ? !bookDays(sh).length : !groupsOf(sh, today());
-      h+='<button class="shopbtn" data-act="pick" data-shop="'+k+'" aria-pressed="'+(S.adminShop===k)+'"'+(off?' disabled':'')+'><b>'+esc(sh.name)+'</b><span>'+esc(off?"今天沒有菜單（店休）":sh.rule.label)+'</span></button>';
+    var sel=adminDate();
+    h+='<h2>訂哪一天？</h2><div class="dates">';
+    bookDays().forEach(function(d){
+      var dd=new Date(d+"T00:00:00");
+      h+='<button class="datebtn" data-act="day" data-date="'+d+'" aria-pressed="'+(d===sel)+'"><small>'+(d===today()?"今天":"週"+"日一二三四五六".charAt(dd.getDay()))+'</small><b class="num">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</b></button>';
     });
     h+='</div>';
-    if(SHOPS[S.adminShop].days){
-      var sel=adminDate();
-      h+='<h2>訂哪一天？</h2><div class="dates">';
-      bookDays(SHOPS[S.adminShop]).forEach(function(d){
-        var dd=new Date(d+"T00:00:00");
-        h+='<button class="datebtn" data-act="day" data-date="'+d+'" aria-pressed="'+(d===sel)+'"><small>'+(d===today()?"今天":"週"+"日一二三四五六".charAt(dd.getDay()))+'</small><b class="num">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</b></button>';
-      });
-      h+='</div>';
-    }
+    h+='<h2>'+(sel===today()?"今天":esc(prettyDate(sel)))+'訂哪一家？</h2><div class="shops">';
+    Object.keys(SHOPS).forEach(function(k){
+      var sh=SHOPS[k], off=!openOn(sh, sel);
+      h+='<button class="shopbtn" data-act="pick" data-shop="'+k+'" aria-pressed="'+(S.adminShop===k && !off)+'"'+(off?' disabled':'')+'><b>'+esc(sh.name)+'</b><span>'+esc(off?"這天店休":sh.rule.label)+'</span></button>';
+    });
+    h+='</div>';
     h+='<h2>幾點截止？</h2><div class="go"><input id="dl" type="time" aria-label="截止時間" value="'+esc(S.adminDeadline)+'" data-in="dl">';
     h+='<button class="btn primary" data-act="open"'+dis+'>開始收單</button></div>';
     h+='<p class="hint">開單後把這頁的網址丟到群組，同事就能點餐。</p>';
@@ -1101,7 +1099,7 @@ document.addEventListener("click", function(ev){
   if(act==="open"){
     if(!S.adminDeadline){ toast("請設定截止時間"); return; }
     var date=adminDate();
-    if(!date || !groupsOf(SHOPS[S.adminShop], date)){ toast(SHOPS[S.adminShop].name+" "+prettyDate(date)+"沒有菜單"); return; }
+    if(!openOn(SHOPS[S.adminShop], date)){ toast(SHOPS[S.adminShop].name+" "+prettyDate(date)+"店休，請換一家"); return; }
     run(function(){ return db.ref().update({ session:{ shop:S.adminShop, deadline:S.adminDeadline, date:date, status:"open", round:Date.now() }, orders:null }); },
       "已開始收單，把網址丟到群組吧"); return;
   }
