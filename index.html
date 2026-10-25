@@ -43,6 +43,14 @@ button{cursor:pointer}
 :focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
 .num{font-variant-numeric:tabular-nums}
 
+/* 已排好的團 */
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px}
+.tab{flex:none;text-align:left;background:var(--sheet);border:1.5px solid var(--rule);border-radius:10px;padding:6px 12px;line-height:1.35;max-width:180px}
+.tab small{display:block;font-size:12px;color:var(--muted);white-space:nowrap}
+.tab b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tab:hover{border-color:var(--muted)}
+.tab[aria-pressed="true"]{border-color:var(--seal);background:var(--seal-soft);box-shadow:inset 0 0 0 1.5px var(--seal)}
+
 /* header */
 .hdr{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:8px 0 18px;border-bottom:2px solid var(--ink)}
 .date{color:var(--muted);font-size:14px}
@@ -78,7 +86,8 @@ button{cursor:pointer}
 .datebtn{background:var(--sheet);border:1.5px solid var(--rule);border-radius:10px;padding:6px 4px;text-align:center;line-height:1.35;transition:border-color .15s,background-color .15s}
 .datebtn small{display:block;font-size:12px;color:var(--muted)}
 .datebtn b{font-size:17px}
-.datebtn:hover{border-color:var(--muted)}
+.datebtn:hover:not(:disabled){border-color:var(--muted)}
+.datebtn:disabled{opacity:.45;cursor:not-allowed}
 .datebtn[aria-pressed="true"]{border-color:var(--seal);background:var(--seal);color:var(--on-seal)}
 .datebtn[aria-pressed="true"] small{color:inherit;opacity:.85}
 .go{display:flex;gap:10px;align-items:stretch}
@@ -165,6 +174,7 @@ textarea{width:100%;min-height:150px;background:var(--paper);border:1px solid va
 </head>
 <body>
 <main>
+  <div id="tabs"></div>
   <div id="hdr"></div>
   <div id="admin"></div>
   <div id="status"></div>
@@ -781,7 +791,11 @@ function bookDays(){
   for(var i=0;i<BOOK_DAYS;i++){ ds.push(d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())); d.setDate(d.getDate()+1); }
   return ds;
 }
-function adminDate(){ return bookDays().indexOf(S.adminDate)>=0 ? S.adminDate : today(); }
+/* 已經有團的日子不能再開，預設選第一個還沒開團的日子 */
+function adminDate(){
+  var ds=bookDays().filter(function(d){ return !S.days[d]; });
+  return ds.indexOf(S.adminDate)>=0 ? S.adminDate : ds[0];
+}
 /* off 是固定公休的星期幾（0 是週日） */
 function openOn(sh, date){ return !!groupsOf(sh, date) && (sh.off||[]).indexOf(new Date(date+"T00:00:00").getDay())<0; }
 function allGroups(sh){ return sh.days ? [].concat.apply(sh.groups, Object.keys(sh.days).map(function(d){ return sh.days[d]; })) : sh.groups; }
@@ -800,6 +814,7 @@ var TOKEN = lsGet("bento_token"); if(!TOKEN){ TOKEN=newToken(); lsSet("bento_tok
 
 var S = {
   loading:true, failed:false, session:null, late:false, orders:[], cart:{}, name:lsGet("bento_name"), note:"", dirty:false, round:null,
+  days:{}, allOrders:{}, view:hashDate(),
   adminShop:"chunfu", adminDate:today(), adminDeadline:"10:30", sumMode:"item", busy:false, lastPhase:null
 };
 
@@ -817,9 +832,9 @@ function patch(el, html){
 }
 
 /* ---------- 資料庫 ----------
-   /session          {shop, deadline, date, status: idle|open|closed, round}
-   /orders/{token}   {name, note, lines:[{key,qty}], paid, updatedAt}
-   orders 只放這一輪的單，開單和開新一輪時整個清掉。 */
+   /days/{date}              {shop, deadline, date, status: open|closed, round}
+   /orders/{date}/{token}    {name, note, lines:[{key,qty}], paid, updatedAt}
+   一天一團，開團和刪除時清掉那天的訂單。 */
 var configured = /^https:\/\/.+(firebaseio\.com|firebasedatabase\.app)/.test(DB_URL);
 var db = configured ? firebase.initializeApp({ databaseURL: DB_URL }).database() : null;
 
@@ -831,15 +846,43 @@ function isLate(s){ return !!(s && s.date && s.deadline) && nowStr() > s.date+" 
 var KEEP_DAYS = 3;
 function isExpired(s){ return !!(s && s.date) && (new Date(today()+"T00:00:00") - new Date(s.date+"T00:00:00")) >= KEEP_DAYS*864e5; }
 
-function onData(v){
-  v = v || {};
-  // 開單超過 3 天就清掉訂單，回到選店家；清完資料庫會再觸發一次 onData
-  if(isExpired(v.session)){ db.ref().update({ session:{ status:"idle", shop:v.session.shop||"chunfu" }, orders:null }); return; }
-  S.session = v.session || null;
-  S.orders = Object.keys(v.orders || {}).map(function(k){
-    var o=v.orders[k]; return { pid:k, name:o.name||"", lines:o.lines||[], paid:!!o.paid, updatedAt:o.updatedAt||0, note:o.note||"", mine:k===TOKEN };
+function hashDate(){ var h=location.hash.slice(1); return /^\d{4}-\d\d-\d\d$/.test(h) ? h : null; }
+/* 正在看哪一天："new" 是開新團；沒指定就看今天的團，沒有就看最近的下一團 */
+function viewDate(){
+  if(S.view==="new") return "new";
+  if(S.view && S.days[S.view]) return S.view;
+  var ds=Object.keys(S.days).sort(), t=today();
+  return S.days[t] ? t : (ds.filter(function(d){ return d>=t; })[0] || ds[ds.length-1] || "new");
+}
+function applyView(){
+  var d=viewDate(), os=S.allOrders[d] || {};
+  S.session = d==="new" ? null : S.days[d];
+  S.orders = Object.keys(os).map(function(k){
+    var o=os[k]; return { pid:k, name:o.name||"", lines:o.lines||[], paid:!!o.paid, updatedAt:o.updatedAt||0, note:o.note||"", mine:k===TOKEN };
   });
   S.late = isLate(S.session);
+}
+function setView(v){
+  S.view=v;
+  try{ history.replaceState(null, "", v && v!=="new" ? "#"+v : location.pathname+location.search); }catch(e){}
+  applyView(); if(S.session && S.session.deadline) S.adminDeadline=S.session.deadline;
+  syncFromServer(); render(); window.scrollTo(0,0);
+}
+
+function onData(v){
+  v = v || {};
+  // 舊版只有一團（/session），搬到 /days 底下；搬完資料庫會再觸發一次 onData
+  if(v.session){
+    var os=v.session, up={ session:null, orders:null };
+    if(os.status!=="idle" && os.date && !isExpired(os)){ up.orders={}; up.orders[os.date]=v.orders||null; up["days/"+os.date]={ shop:os.shop, deadline:os.deadline, date:os.date, status:os.status, round:os.round||Date.now() }; }
+    db.ref().update(up); return;
+  }
+  // 開團日超過 3 天就清掉那團和訂單
+  var days=v.days || {}, ex={}, n=0;
+  Object.keys(days).forEach(function(d){ days[d].date=d; if(isExpired(days[d])){ ex["days/"+d]=null; ex["orders/"+d]=null; n++; } });
+  if(n){ db.ref().update(ex); return; }
+  S.days=days; S.allOrders=v.orders || {};
+  applyView();
   if(S.loading){
     if(S.session && SHOPS[S.session.shop]){ S.adminShop=S.session.shop; if(SHOPS[S.adminShop].deadline) S.adminDeadline=SHOPS[S.adminShop].deadline; }
     if(S.session && S.session.deadline) S.adminDeadline=S.session.deadline;
@@ -878,7 +921,7 @@ function syncFromServer(){
 
 /* ---------- render ---------- */
 function render(){
-  var all=["hdr","admin","status","menu","pay","board","bar","foot"];
+  var all=["tabs","hdr","admin","status","menu","pay","board","bar","foot"];
   if(!configured){
     patch($("hdr"), '<div class="empty"><b>還沒設定資料庫網址</b>請把 index.html 開頭的 DB_URL 換成你的 Firebase 即時資料庫網址。</div>');
     all.slice(1).forEach(function(id){ patch($(id), ""); }); return;
@@ -886,11 +929,25 @@ function render(){
   if(S.loading){ patch($("hdr"), '<div class="empty">載入中…</div>'); return; }
   if(S.failed){
     patch($("hdr"), '<div class="empty"><b>連不到點餐資料</b>請稍後重新整理，或確認 Firebase 的規則有開放讀寫。</div>');
-    all.slice(1).forEach(function(id){ patch($(id), ""); }); return;
+    all.filter(function(id){ return id!=="hdr"; }).forEach(function(id){ patch($(id), ""); }); return;
   }
   var ph=phase(), sh=shop();
-  renderHeader(ph, sh); renderAdmin(ph, sh); renderStatus(ph, sh); renderMenu(ph, sh); renderPay(ph, sh); renderBoard(ph, sh); renderBar(ph, sh);
+  renderTabs(); renderHeader(ph, sh); renderAdmin(ph, sh); renderStatus(ph, sh); renderMenu(ph, sh); renderPay(ph, sh); renderBoard(ph, sh); renderBar(ph, sh);
   S.lastPhase=ph;
+}
+
+function renderTabs(){
+  var ds=Object.keys(S.days).sort(), cur=viewDate();
+  if(!ds.length){ patch($("tabs"), ""); return; }
+  var h='<nav class="tabs" aria-label="已開的團">';
+  ds.forEach(function(d){
+    var s=S.days[d], sh=SHOPS[s.shop];
+    var st = s.status==="closed" ? "已結單" : (isLate(s) ? "已截止" : "收單中");
+    h+='<button class="tab" data-act="view" data-date="'+d+'" aria-pressed="'+(d===cur)+'"><small>'+(d===today()?"今天":esc(prettyDate(d)))+'・'+st+'</small><b>'+esc(sh?sh.name:"")+'</b></button>';
+  });
+  h+='<button class="tab" data-act="view" data-date="new" aria-pressed="'+(cur==="new")+'"><small>再排一天</small><b>＋開新團</b></button>';
+  h+='</nav>';
+  patch($("tabs"), h);
 }
 
 function renderHeader(ph, sh){
@@ -898,7 +955,7 @@ function renderHeader(ph, sh){
   var stamp = S.lastPhase && S.lastPhase!==ph && ph!=="idle" ? " stamp" : "";
   var h='<header class="hdr"><div>';
   if(ph==="idle"){
-    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">今天訂便當</h1><p class="meta">選好日期、店家和截止時間就能開始收單。　<a href="menu.html">看各家菜單</a></p>';
+    h+='<div class="date">'+esc(todayPretty())+'</div><h1 class="shop">'+(Object.keys(S.days).length?"開新團":"今天訂便當")+'</h1><p class="meta">選好日期、店家和截止時間就能開始收單，可以先排好之後幾天。　<a href="menu.html">看各家菜單</a></p>';
   } else {
     h+='<div class="date">'+esc(prettyDate(S.session.date))+'　截止 '+esc(S.session.deadline)+'</div>';
     h+='<h1 class="shop">'+esc(sh.name)+'</h1>';
@@ -916,10 +973,11 @@ function renderAdmin(ph, sh){
   var h='<section class="panel '+(ph==="idle"?"setup":"owner")+'" aria-label="主揪設定">';
   if(ph==="idle"){
     var sel=adminDate();
+    if(!sel){ h+='<h2>兩週內每天都開團了</h2><p class="hint">要換店家，先到那天的團結單後刪除。</p></section>'; patch($("admin"), h); patch($("foot"), ""); return; }
     h+='<h2>訂哪一天？</h2><div class="dates">';
     bookDays().forEach(function(d){
-      var dd=new Date(d+"T00:00:00");
-      h+='<button class="datebtn" data-act="day" data-date="'+d+'" aria-pressed="'+(d===sel)+'"><small>'+(d===today()?"今天":"週"+"日一二三四五六".charAt(dd.getDay()))+'</small><b class="num">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</b></button>';
+      var dd=new Date(d+"T00:00:00"), taken=!!S.days[d];
+      h+='<button class="datebtn" data-act="day" data-date="'+d+'" aria-pressed="'+(d===sel)+'"'+(taken?' disabled':'')+'><small>'+(taken?"已開團":d===today()?"今天":"週"+"日一二三四五六".charAt(dd.getDay()))+'</small><b class="num">'+(dd.getMonth()+1)+'/'+dd.getDate()+'</b></button>';
     });
     h+='</div>';
     h+='<h2>'+(sel===today()?"今天":esc(prettyDate(sel)))+'訂哪一家？</h2><div class="shops">';
@@ -939,8 +997,8 @@ function renderAdmin(ph, sh){
   } else {
     h+='<h2>主揪：已結單</h2><div class="row-ctl">';
     h+='<button class="btn ghost" data-act="reopen"'+dis+'>重新開放點餐</button>';
-    h+='<button class="btn danger" data-act="newround"'+dis+'>'+"開新一輪"+'</button></div>';
-    h+='<p class="hint">開新一輪會清除這次所有人的訂單，回到選店家。</p>';
+    h+='<button class="btn danger" data-act="newround"'+dis+'>刪除這團</button></div>';
+    h+='<p class="hint">刪除會清除這天所有人的訂單，這天就可以重新開團。</p>';
   }
   h+='</section>';
   patch($("admin"), ph==="idle" ? h : "");
@@ -1072,8 +1130,8 @@ function canOrder(){
   if(phase()==="open") return true;
   toast("已經截止，不能再改了"); render(); return false;
 }
-var myRef=function(){ return db.ref("orders/"+TOKEN); };
-var sessionRef=function(){ return db.ref("session"); };
+var myRef=function(){ return db.ref("orders/"+S.session.date+"/"+TOKEN); };
+var sessionRef=function(){ return db.ref("days/"+S.session.date); };
 
 document.addEventListener("click", function(ev){
   var b=ev.target.closest("[data-act]"); if(!b || b.disabled) return;
@@ -1099,16 +1157,19 @@ document.addEventListener("click", function(ev){
   if(act==="open"){
     if(!S.adminDeadline){ toast("請設定截止時間"); return; }
     var date=adminDate();
+    if(!date){ toast("兩週內每天都開團了"); return; }
     if(!openOn(SHOPS[S.adminShop], date)){ toast(SHOPS[S.adminShop].name+" "+prettyDate(date)+"店休，請換一家"); return; }
-    run(function(){ return db.ref().update({ session:{ shop:S.adminShop, deadline:S.adminDeadline, date:date, status:"open", round:Date.now() }, orders:null }); },
-      "已開始收單，把網址丟到群組吧"); return;
+    run(function(){ var up={}; up["days/"+date]={ shop:S.adminShop, deadline:S.adminDeadline, date:date, status:"open", round:Date.now() }; up["orders/"+date]=null; return db.ref().update(up); },
+      "已開團，把網址丟到群組吧", function(){ setView(date); }); return;
   }
   if(act==="setdl"){ if(!S.adminDeadline){ toast("請設定截止時間"); return; } run(function(){ return sessionRef().update({ deadline:S.adminDeadline, status:"open" }); }, "截止時間已更新"); return; }
   if(act==="close"){ run(function(){ return sessionRef().update({ status:"closed" }); }, "已結單"); return; }
   if(act==="reopen"){ if(S.late) toast("截止時間已過，記得更新截止時間"); run(function(){ return sessionRef().update({ status:"open" }); }); return; }
   if(act==="newround"){
-    run(function(){ return db.ref().update({ session:{ status:"idle", shop:S.session.shop }, orders:null }); }, "已清除，可以重新選店家"); return;
+    var d=S.session.date;
+    run(function(){ var up={}; up["days/"+d]=null; up["orders/"+d]=null; return db.ref().update(up); }, "已刪除這團", function(){ S.adminDate=d; setView(null); }); return;
   }
+  if(act==="view"){ setView(b.getAttribute("data-date")); return; }
   if(act==="day"){ S.adminDate=b.getAttribute("data-date"); render(); return; }
   if(act==="summode"){ S.sumMode=b.getAttribute("data-mode"); render(); return; }
   if(act==="copy"){
@@ -1131,7 +1192,7 @@ document.addEventListener("change", function(ev){
   var pid=ev.target.getAttribute && ev.target.getAttribute("data-paid");
   if(!pid) return;
   var val=ev.target.checked;
-  db.ref("orders/"+pid+"/paid").set(val).catch(function(){ ev.target.checked=!val; toast("連線失敗，請稍後再試"); });
+  db.ref("orders/"+S.session.date+"/"+pid+"/paid").set(val).catch(function(){ ev.target.checked=!val; toast("連線失敗，請稍後再試"); });
 });
 
 /* ---------- boot ---------- */
@@ -1141,8 +1202,9 @@ document.addEventListener("change", function(ev){
   var fail=function(){ if(S.loading){ S.failed=true; S.loading=false; render(); } };
   db.ref().on("value", function(snap){ onData(snap.val()); }, function(){ S.loading=true; fail(); });
   setTimeout(fail, 15000);
+  window.addEventListener("hashchange", function(){ var d=hashDate(); if(d && d!==S.view && !S.loading) setView(d); });
   // 截止時間是在瀏覽器判斷的，時間到要自己重畫
-  setInterval(function(){ if(S.loading || S.failed) return; var l=isLate(S.session); if(l!==S.late){ S.late=l; render(); } }, 10000);
+  setInterval(function(){ if(S.loading || S.failed) return; S.late=isLate(S.session); render(); }, 10000);
 })();
 </script>
 </body>
